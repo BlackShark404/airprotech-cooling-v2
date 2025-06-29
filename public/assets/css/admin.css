@@ -1,0 +1,343 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Arial', sans-serif;
+}
+
+.navbar {
+    background-color: #212529;
+    padding: 0.75rem 1rem;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    color: white;
+    font-weight: 600;
+}
+
+.nav-scroll {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+}
+
+.nav-scroll::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari, Opera */
+}
+
+.nav-tabs {
+    border-bottom: none;
+    min-width: max-content;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    color: #6c757d;
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.nav-tabs .nav-link.active {
+    color: #ff3b30;
+    border-bottom: 2px solid #ff3b30;
+    background-color: transparent;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.stats-icon {
+    font-size: 24px;
+}
+
+.stats-icon-blue {
+    color: #007bff;
+}
+
+.stats-icon-red {
+    color: #ff3b30;
+}
+
+.stats-icon-orange {
+    color: #ff9500;
+}
+
+.stats-icon-green {
+    color: #34c759;
+}
+
+.stats-value {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.stats-label {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.stats-percent {
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+.stats-percent-up {
+    background-color: #e6f7e9;
+    color: #34c759;
+}
+
+.stats-percent-down {
+    background-color: #ffe5e5;
+    color: #ff3b30;
+}
+
+.action-button {
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-red {
+    background-color: #ff3b30;
+    color: white;
+}
+
+.btn-blue {
+    background-color: #007bff;
+    color: white;
+}
+
+.badge-progress {
+    background-color: #e7f1ff;
+    color: #007bff;
+}
+
+.badge-pending {
+    background-color: #fff8e6;
+    color: #ffbb00;
+}
+
+.badge-completed {
+    background-color: #e6f7e9;
+    color: #34c759;
+}
+
+.badge-high {
+    background-color: #ffe5e5;
+    color: #ff3b30;
+}
+
+.badge-medium {
+    background-color: #fff0e5;
+    color: #ff9500;
+}
+
+.badge-low {
+    background-color: #e6f7e9;
+    color: #34c759;
+}
+
+.badge-active {
+    background-color: #e6f7e9;
+    color: #34c759;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.badge-break {
+    background-color: #fff0e5;
+    color: #ff9500;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+.table th {
+    font-weight: 600;
+    color: #6c757d;
+    border-top: none;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 16px 12px;
+}
+
+.tech-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 10px;
+}
+
+.tech-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.tech-info {
+    font-size: 14px;
+}
+
+.activity-item {
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.activity-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.activity-icon-green {
+    background-color: #e6f7e9;
+    color: #34c759;
+}
+
+.activity-icon-orange {
+    background-color: #fff8e6;
+    color: #ffbb00;
+}
+
+.chart-container {
+    height: 250px;
+}
+
+.view-all {
+    font-size: 14px;
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.card-header {
+    background-color: transparent;
+    border-bottom: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+}
+
+.view-all:hover {
+    text-decoration: underline;
+}
+
+/* Profile dropdown styles */
+.profile-dropdown .dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: none;
+    padding: 8px 0;
+    min-width: 180px;
+}
+
+.profile-dropdown .dropdown-item {
+    padding: 8px 16px;
+    color: #343a40;
+    font-size: 14px;
+}
+
+.profile-dropdown .dropdown-item:hover {
+    background-color: #f8f9fa;
+}
+
+.profile-dropdown .dropdown-item i {
+    margin-right: 8px;
+    color: #6c757d;
+}
+
+.profile-dropdown .dropdown-toggle::after {
+    vertical-align: middle;
+}
+
+.profile-dropdown .dropdown-divider {
+    margin: 4px 0;
+}
+
+/* Responsive styles */
+@media (max-width: 767.98px) {
+    .stats-value {
+        font-size: 22px;
+    }
+
+    .stats-percent {
+        font-size: 12px;
+        padding: 2px 6px;
+    }
+
+    .stats-icon {
+        font-size: 20px;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .card-header .view-all {
+        margin-top: 0.5rem;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .table {
+        min-width: 600px;
+    }
+}
+
+/* Handle smaller text on very small devices */
+@media (max-width: 375px) {
+    .stats-label {
+        font-size: 14px;
+    }
+
+    .stats-value {
+        font-size: 18px;
+    }
+
+    .nav-tabs .nav-link {
+        padding: 0.75rem 1rem;
+    }
+}
+
+/* Make technician cards more compact on small screens */
+@media (max-width: 575.98px) {
+    .tech-card {
+        padding: 8px;
+    }
+
+    .tech-avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .tech-info {
+        font-size: 12px;
+    }
+}

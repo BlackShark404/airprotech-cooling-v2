@@ -1,0 +1,314 @@
+:root {
+    --primary-color: #1a237e;
+    --secondary-color: #ff3d00;
+    --light-gray: #f5f5f5;
+    --border-radius: 0.375rem;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+header {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.3rem;
+}
+
+.brand-red {
+    color: #ff3d00;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-container {
+    flex: 1;
+    max-width: 1000px;
+    margin: 2rem auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    height: 600px;
+}
+
+.panel {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.left-panel,
+.right-panel {
+    flex: 1;
+    padding: 3rem 2rem;
+    flex-direction: column;
+}
+
+.left-panel {
+    background-color: var(--primary-color);
+    color: white;
+    position: relative;
+    overflow: hidden;
+    justify-content: space-between;
+}
+
+.right-panel {
+    background-color: white;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.snowflake-icon {
+    font-size: 5rem;
+    opacity: 0.2;
+    margin-top: 1rem;
+}
+
+.fan-icon {
+    position: absolute;
+    font-size: 3rem;
+    opacity: 0.2;
+    bottom: 10%;
+    right: 15%;
+}
+
+.fan-icon-2 {
+    position: absolute;
+    font-size: 2rem;
+    opacity: 0.2;
+    bottom: 30%;
+    right: 25%;
+}
+
+.fan-icon-3 {
+    position: absolute;
+    font-size: 2.5rem;
+    opacity: 0.2;
+    top: 20%;
+    right: 20%;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.form-control {
+    border-radius: var(--border-radius);
+    padding: 0.75rem 1rem;
+    border: 1px solid #ddd;
+    background-color: #f8f9fa;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(26, 35, 126, 0.1);
+}
+
+.btn-primary {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+    color: white;
+    padding: 0.75rem;
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #e53935;
+    border-color: #e53935;
+}
+
+.form-text {
+    color: #777;
+    font-size: 0.85rem;
+}
+
+.toggle-link {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.toggle-link:hover {
+    text-decoration: underline;
+}
+
+footer {
+    background-color: var(--light-gray);
+    padding: 1rem 0;
+    font-size: 0.875rem;
+    color: #666;
+    border-top: 1px solid #e0e0e0;
+}
+
+.social-icons a {
+    color: #666;
+    margin-left: 1rem;
+    transition: color 0.2s;
+}
+
+.social-icons a:hover {
+    color: var(--primary-color);
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 2rem;
+}
+
+.feature-list li {
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+}
+
+.feature-list i {
+    margin-right: 0.5rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.company-tagline {
+    font-size: 1.1rem;
+    opacity: 0.8;
+}
+
+.trusted-by {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-top: 2rem;
+}
+
+.trusted-by p {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.company-logos {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+}
+
+.company-logos span {
+    opacity: 0.6;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .panel {
+        flex-direction: column;
+    }
+
+    .left-panel,
+    .right-panel {
+        width: 100%;
+        padding: 2rem 1.5rem;
+    }
+
+    .left-panel {
+        text-align: center;
+    }
+
+    .auth-container {
+        height: auto;
+    }
+}
+
+/* Enhancement: Input with icons */
+.input-icon-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 1rem;
+    color: #777;
+}
+
+.input-with-icon {
+    padding-left: 2.5rem;
+}
+
+/* Enhancement: Password visibility toggle */
+.password-toggle {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 1rem;
+    color: #777;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* Custom decoration */
+.wave-shape {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    opacity: 0.2;
+}
+
+.service-highlights {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.5rem;
+}
+
+.service-highlight {
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.service-highlight i {
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.service-highlight p {
+    font-size: 0.8rem;
+    margin-bottom: 0;
+}
+
+.form-content {
+    padding: 1rem 0.5rem;
+}
+
+/* Improved typography */
+label.form-label {
+    font-weight: 500;
+    margin-bottom: 0.4rem;
+    color: #444;
+}
+
+.toast {
+    border-radius: 6px;
+    font-weight: 500;
+}

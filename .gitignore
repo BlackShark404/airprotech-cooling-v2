@@ -1,0 +1,21 @@
+# PHP Vendor
+vendor/
+
+# Node JS
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Environment Variables
+.env
+
+# Logs and Cache
+storage/
+*.log
+debug.log
+
+# Editor Settings
+.vscode/
+.idea/
+/vendor/

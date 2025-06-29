@@ -1,0 +1,345 @@
+/* Inventory Management Styles */
+
+/* Stats Cards */
+.stats-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stats-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 24px;
+}
+
+.stats-icon.products {
+    background-color: rgba(92, 182, 242, 0.1);
+    color: #5cb6f2;
+}
+
+.stats-icon.variants {
+    background-color: rgba(75, 192, 192, 0.1);
+    color: #4bc0c0;
+}
+
+.stats-icon.warehouses {
+    background-color: rgba(153, 102, 255, 0.1);
+    color: #9966ff;
+}
+
+.stats-icon.low-stock {
+    background-color: rgba(255, 99, 132, 0.1);
+    color: #ff6384;
+}
+
+.stats-info h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.stats-info p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 14px;
+}
+
+/* View Selector */
+.view-selector .btn-group .btn {
+    padding: 8px 16px;
+}
+
+/* Main Content Card */
+.card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 25px;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #e9ecef;
+    padding: 16px 20px;
+}
+
+/* Tables */
+.table th {
+    font-weight: 500;
+    color: #495057;
+    border-top: none;
+    background-color: #f8f9fa;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* Action Buttons */
+.btn-red {
+    background-color: #ff6b6b;
+    border-color: #ff6b6b;
+    color: white;
+}
+
+.btn-red:hover {
+    background-color: #ff5252;
+    border-color: #ff5252;
+    color: white;
+}
+
+.action-buttons .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.action-buttons .btn i {
+    font-size: 14px;
+}
+
+/* Product Detail Modal */
+.product-detail-image {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.product-detail-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.feature-list {
+    padding-left: 20px;
+    margin-bottom: 0;
+}
+
+.spec-table {
+    margin-bottom: 0;
+}
+
+.spec-table td:first-child {
+    font-weight: 500;
+    width: 40%;
+}
+
+/* Inventory Detail Cards */
+.inventory-detail-card {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.inventory-detail-card h6 {
+    margin-bottom: 10px;
+    color: #495057;
+}
+
+.inventory-detail-card .badge {
+    font-size: 11px;
+    padding: 5px 8px;
+}
+
+/* Forms in Modals */
+.modal-body .form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.tab-content {
+    background: #fff;
+}
+
+/* Variant Form */
+.variant-form {
+    background-color: rgba(92, 182, 242, 0.05);
+}
+
+/* Warehouse List */
+#warehouseListTable th {
+    font-size: 14px;
+}
+
+#warehouseListTable td {
+    font-size: 14px;
+}
+
+/* Stock History Table */
+#stock-history .table th {
+    font-size: 14px;
+}
+
+#stock-history .table td {
+    font-size: 14px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stats-card {
+        padding: 15px;
+    }
+    
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+    
+    .stats-info h3 {
+        font-size: 20px;
+    }
+    
+    .product-detail-image {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+/* Mobile optimizations */
+@media (max-width: 576px) {
+    .view-selector, .filter-selector {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .col-md-4.d-flex.justify-content-end {
+        justify-content: flex-start !important;
+        margin-top: 10px;
+    }
+}
+
+/* Table Action Buttons */
+.table-action-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    margin-right: 5px;
+}
+
+.table-action-btn i {
+    font-size: 14px;
+}
+
+.view-btn {
+    background-color: #5cb6f2;
+    border-color: #5cb6f2;
+    color: white;
+}
+
+.view-btn:hover {
+    background-color: #4aa0db;
+    border-color: #4aa0db;
+    color: white;
+}
+
+.edit-btn {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: white;
+}
+
+.edit-btn:hover {
+    background-color: #e0a800;
+    border-color: #e0a800;
+    color: white;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+    border-color: #c82333;
+    color: white;
+}
+
+/* Stock Status Badges */
+.badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529;
+}
+
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+/* Inventory Type Badges */
+.badge.inventory-regular {
+    background-color: #5cb6f2;
+}
+
+.badge.inventory-display {
+    background-color: #6f42c1;
+}
+
+.badge.inventory-reserve {
+    background-color: #20c997;
+}
+
+.badge.inventory-damaged {
+    background-color: #dc3545;
+}
+
+.badge.inventory-returned {
+    background-color: #fd7e14;
+}
+
+.badge.inventory-quarantine {
+    background-color: #6c757d;
+}
+
+/* Custom Scrollbar for Tables */
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
