@@ -201,15 +201,12 @@ CREATE TABLE PRODUCT_VARIANT (
     VAR_INSTALLATION_FEE            DECIMAL(10, 2) DEFAULT 0.00,
 
     -- Computed Prices - modified to reference parent product's discount rates
-    VAR_PRICE_FREE_INSTALL          DECIMAL(10, 2) GENERATED ALWAYS AS 
-                                    (VAR_SRP_PRICE * (1 - (SELECT PROD_DISCOUNT_FREE_INSTALL_PCT FROM PRODUCT WHERE PROD_ID = PRODUCT_VARIANT.PROD_ID) / 100)) STORED,
+    VAR_PRICE_FREE_INSTALL          DECIMAL(10, 2),
 
-    VAR_PRICE_WITH_INSTALL1         DECIMAL(10, 2) GENERATED ALWAYS AS 
-                                    ((VAR_SRP_PRICE * (1 - (SELECT PROD_DISCOUNT_WITH_INSTALL_PCT1 FROM PRODUCT WHERE PROD_ID = PRODUCT_VARIANT.PROD_ID) / 100)) + VAR_INSTALLATION_FEE) STORED,
+    VAR_PRICE_WITH_INSTALL1         DECIMAL(10, 2),
 
-    VAR_PRICE_WITH_INSTALL2         DECIMAL(10, 2) GENERATED ALWAYS AS 
-                                    ((VAR_SRP_PRICE * (1 - (SELECT PROD_DISCOUNT_WITH_INSTALL_PCT2 FROM PRODUCT WHERE PROD_ID = PRODUCT_VARIANT.PROD_ID) / 100)) + VAR_INSTALLATION_FEE) STORED,
-
+    VAR_PRICE_WITH_INSTALL2         DECIMAL(10, 2),
+	
     VAR_POWER_CONSUMPTION           VARCHAR(20),
     PROD_ID                         INTEGER NOT NULL,
     VAR_CREATED_AT                  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -343,6 +340,37 @@ CREATE TRIGGER create_role_record_after_user_insert
 AFTER INSERT ON USER_ACCOUNT
 FOR EACH ROW
 EXECUTE FUNCTION create_role_specific_record();
+
+
+-- --------------------------------------
+-- 2. Triggers for Computing discounts
+-- --------------------------------------
+CREATE OR REPLACE FUNCTION compute_variant_prices() RETURNS TRIGGER AS $$
+BEGIN
+  SELECT 
+    p.PROD_DISCOUNT_FREE_INSTALL_PCT,
+    p.PROD_DISCOUNT_WITH_INSTALL_PCT1,
+    p.PROD_DISCOUNT_WITH_INSTALL_PCT2
+  INTO
+    NEW._discount1,
+    NEW._discount2,
+    NEW._discount3
+  FROM PRODUCT p
+  WHERE p.PROD_ID = NEW.PROD_ID;
+
+  NEW.VAR_PRICE_FREE_INSTALL := NEW.VAR_SRP_PRICE * (1 - NEW._discount1 / 100);
+  NEW.VAR_PRICE_WITH_INSTALL1 := (NEW.VAR_SRP_PRICE * (1 - NEW._discount2 / 100)) + NEW.VAR_INSTALLATION_FEE;
+  NEW.VAR_PRICE_WITH_INSTALL2 := (NEW.VAR_SRP_PRICE * (1 - NEW._discount3 / 100)) + NEW.VAR_INSTALLATION_FEE;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_compute_variant_prices
+BEFORE INSERT OR UPDATE ON PRODUCT_VARIANT
+FOR EACH ROW
+EXECUTE FUNCTION compute_variant_prices();
+
 
 -- --------------------------------------
 -- 3. Triggers for Inventory Management
