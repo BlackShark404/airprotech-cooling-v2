@@ -150,13 +150,18 @@ CREATE TABLE BOOKING_ASSIGNMENT (
 -- --------------------------------------
 -- PRODUCT Table: Stores product information
 CREATE TABLE PRODUCT (
-    PROD_ID              SERIAL PRIMARY KEY,
-    PROD_IMAGE           TEXT NOT NULL,
-    PROD_NAME            VARCHAR(100) NOT NULL,
-    PROD_DESCRIPTION     TEXT,
-    PROD_CREATED_AT      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PROD_UPDATED_AT      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PROD_DELETED_AT      TIMESTAMP
+    PROD_ID                         SERIAL PRIMARY KEY,
+    PROD_IMAGE                      TEXT NOT NULL,
+    PROD_NAME                       VARCHAR(100) NOT NULL,
+    PROD_DESCRIPTION                TEXT,
+    -- Updated discount fields to handle multiple installation options
+    PROD_DISCOUNT_FREE_INSTALL_PCT  DECIMAL(5, 2) DEFAULT 0.00,  -- e.g., 15.00
+    PROD_DISCOUNT_WITH_INSTALL_PCT1 DECIMAL(5, 2) DEFAULT 0.00,  -- Primary discount rate (e.g., 25.00)
+    PROD_DISCOUNT_WITH_INSTALL_PCT2 DECIMAL(5, 2) DEFAULT 0.00,  -- Secondary discount rate (e.g., 27.00)
+    PROD_HAS_FREE_INSTALL_OPTION    BOOLEAN DEFAULT TRUE,        -- Indicates if product offers free installation option
+    PROD_CREATED_AT                 TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PROD_UPDATED_AT                 TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PROD_DELETED_AT                 TIMESTAMP
 );
 
 
@@ -190,19 +195,20 @@ CREATE TABLE PRODUCT_VARIANT (
     VAR_CAPACITY                    VARCHAR(20) NOT NULL,
     VAR_SRP_PRICE                   DECIMAL(10, 2) NOT NULL,
 
-    -- Discounts
-    VAR_DISCOUNT_FREE_INSTALL_PCT   DECIMAL(5, 2) DEFAULT 0.00,  -- e.g., 15.00
-    VAR_DISCOUNT_WITH_INSTALL_PCT   DECIMAL(5, 2) DEFAULT 0.00,  -- e.g., 25.00
+    -- Removed discount fields (moved to PRODUCT table)
 
     -- Installation Fee (used only for 'with install' pricing)
     VAR_INSTALLATION_FEE            DECIMAL(10, 2) DEFAULT 0.00,
 
-    -- Computed Prices
+    -- Computed Prices - modified to reference parent product's discount rates
     VAR_PRICE_FREE_INSTALL          DECIMAL(10, 2) GENERATED ALWAYS AS 
-                                    (VAR_SRP_PRICE * (1 - VAR_DISCOUNT_FREE_INSTALL_PCT / 100)) STORED,
+                                    (VAR_SRP_PRICE * (1 - (SELECT PROD_DISCOUNT_FREE_INSTALL_PCT FROM PRODUCT WHERE PROD_ID = PRODUCT_VARIANT.PROD_ID) / 100)) STORED,
 
-    VAR_PRICE_WITH_INSTALL          DECIMAL(10, 2) GENERATED ALWAYS AS 
-                                    ((VAR_SRP_PRICE * (1 - VAR_DISCOUNT_WITH_INSTALL_PCT / 100)) + VAR_INSTALLATION_FEE) STORED,
+    VAR_PRICE_WITH_INSTALL1         DECIMAL(10, 2) GENERATED ALWAYS AS 
+                                    ((VAR_SRP_PRICE * (1 - (SELECT PROD_DISCOUNT_WITH_INSTALL_PCT1 FROM PRODUCT WHERE PROD_ID = PRODUCT_VARIANT.PROD_ID) / 100)) + VAR_INSTALLATION_FEE) STORED,
+
+    VAR_PRICE_WITH_INSTALL2         DECIMAL(10, 2) GENERATED ALWAYS AS 
+                                    ((VAR_SRP_PRICE * (1 - (SELECT PROD_DISCOUNT_WITH_INSTALL_PCT2 FROM PRODUCT WHERE PROD_ID = PRODUCT_VARIANT.PROD_ID) / 100)) + VAR_INSTALLATION_FEE) STORED,
 
     VAR_POWER_CONSUMPTION           VARCHAR(20),
     PROD_ID                         INTEGER NOT NULL,
@@ -238,9 +244,11 @@ CREATE TABLE PRODUCT_BOOKING (
     PB_INVENTORY_DEDUCTED BOOLEAN DEFAULT FALSE,
     PB_WAREHOUSE_ID     INT,  -- The warehouse from which the products will be taken
 
-    -- free_install → VAR_PRICE_FREE_INSTALL
-    -- with_install → VAR_PRICE_WITH_INSTALL
-    PB_PRICE_TYPE VARCHAR(20) NOT NULL CHECK (PB_PRICE_TYPE IN ('free_install', 'with_install')),
+    -- Updated to clarify all installation options:
+    -- 'free_installation' - Installation is free (uses VAR_PRICE_FREE_INSTALL)
+    -- 'with_installation1' - Primary paid installation option (uses VAR_PRICE_WITH_INSTALL1)
+    -- 'with_installation2' - Secondary paid installation option (uses VAR_PRICE_WITH_INSTALL2)
+    PB_PRICE_TYPE VARCHAR(20) NOT NULL CHECK (PB_PRICE_TYPE IN ('free_installation', 'with_installation1', 'with_installation2')),
    
     PB_ORDER_DATE       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	PB_PREFERRED_DATE   DATE NOT NULL,
@@ -345,6 +353,10 @@ RETURNS TRIGGER AS $$
 DECLARE
     available_quantity INT;
     warehouse_id INT;
+    has_free_install BOOLEAN;
+    discount_with_install1 DECIMAL(5, 2);
+    discount_with_install2 DECIMAL(5, 2);
+    variant_product_id INT;
 BEGIN
     -- Proceed only if:
     -- (a) New status is 'confirmed'
@@ -353,6 +365,31 @@ BEGIN
         NEW.PB_STATUS = 'confirmed' AND 
         NEW.PB_INVENTORY_DEDUCTED = FALSE
     ) THEN
+        -- Get the product ID associated with this variant for checking installation options
+        SELECT 
+            PROD_ID, 
+            PROD_HAS_FREE_INSTALL_OPTION,
+            PROD_DISCOUNT_WITH_INSTALL_PCT1,
+            PROD_DISCOUNT_WITH_INSTALL_PCT2
+        INTO 
+            variant_product_id, 
+            has_free_install,
+            discount_with_install1,
+            discount_with_install2
+        FROM PRODUCT_VARIANT
+        JOIN PRODUCT ON PRODUCT_VARIANT.PROD_ID = PRODUCT.PROD_ID
+        WHERE VAR_ID = NEW.PB_VARIANT_ID;
+        
+        -- Validate the price type against the product's installation options
+        IF NEW.PB_PRICE_TYPE = 'free_installation' AND NOT has_free_install THEN
+            RAISE EXCEPTION 'Product does not offer free installation option';
+        END IF;
+        
+        -- Check if second installation discount is applicable (if discount2 is 0, option isn't available)
+        IF NEW.PB_PRICE_TYPE = 'with_installation2' AND discount_with_install2 = 0 THEN
+            RAISE EXCEPTION 'Product does not offer secondary installation discount option';
+        END IF;
+    
         -- If PB_WAREHOUSE_ID was specified, use it
         IF NEW.PB_WAREHOUSE_ID IS NOT NULL THEN
             SELECT QUANTITY INTO available_quantity
