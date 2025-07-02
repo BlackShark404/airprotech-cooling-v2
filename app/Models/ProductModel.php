@@ -29,13 +29,36 @@ class ProductModel extends Model
             }
         }
         
-        $sql = "INSERT INTO {$this->table} (PROD_IMAGE, PROD_NAME, PROD_DESCRIPTION, PROD_CREATED_AT, PROD_UPDATED_AT)
-                VALUES (:prod_image, :prod_name, :prod_description, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+        $sql = "INSERT INTO {$this->table} (
+                PROD_IMAGE, 
+                PROD_NAME, 
+                PROD_DESCRIPTION, 
+                PROD_DISCOUNT_FREE_INSTALL_PCT,
+                PROD_DISCOUNT_WITH_INSTALL_PCT1,
+                PROD_DISCOUNT_WITH_INSTALL_PCT2,
+                PROD_HAS_FREE_INSTALL_OPTION,
+                PROD_CREATED_AT, 
+                PROD_UPDATED_AT
+            ) VALUES (
+                :prod_image, 
+                :prod_name, 
+                :prod_description, 
+                :prod_discount_free_install_pct,
+                :prod_discount_with_install_pct1,
+                :prod_discount_with_install_pct2,
+                :prod_has_free_install_option,
+                CURRENT_TIMESTAMP, 
+                CURRENT_TIMESTAMP
+            )";
         
         $params = [
             ':prod_image' => $data['PROD_IMAGE'],
             ':prod_name' => $data['PROD_NAME'],
             ':prod_description' => $data['PROD_DESCRIPTION'],
+            ':prod_discount_free_install_pct' => $data['PROD_DISCOUNT_FREE_INSTALL_PCT'] ?? 0.00,
+            ':prod_discount_with_install_pct1' => $data['PROD_DISCOUNT_WITH_INSTALL_PCT1'] ?? 0.00,
+            ':prod_discount_with_install_pct2' => $data['PROD_DISCOUNT_WITH_INSTALL_PCT2'] ?? 0.00,
+            ':prod_has_free_install_option' => $data['PROD_HAS_FREE_INSTALL_OPTION'] ?? true,
         ];
         
         $this->execute($sql, $params);
@@ -58,6 +81,22 @@ class ProductModel extends Model
         if (isset($data['PROD_DESCRIPTION'])) {
             $setClauses[] = "PROD_DESCRIPTION = :prod_description";
             $params[':prod_description'] = $data['PROD_DESCRIPTION'];
+        }
+        if (isset($data['PROD_DISCOUNT_FREE_INSTALL_PCT'])) {
+            $setClauses[] = "PROD_DISCOUNT_FREE_INSTALL_PCT = :prod_discount_free_install_pct";
+            $params[':prod_discount_free_install_pct'] = $data['PROD_DISCOUNT_FREE_INSTALL_PCT'];
+        }
+        if (isset($data['PROD_DISCOUNT_WITH_INSTALL_PCT1'])) {
+            $setClauses[] = "PROD_DISCOUNT_WITH_INSTALL_PCT1 = :prod_discount_with_install_pct1";
+            $params[':prod_discount_with_install_pct1'] = $data['PROD_DISCOUNT_WITH_INSTALL_PCT1'];
+        }
+        if (isset($data['PROD_DISCOUNT_WITH_INSTALL_PCT2'])) {
+            $setClauses[] = "PROD_DISCOUNT_WITH_INSTALL_PCT2 = :prod_discount_with_install_pct2";
+            $params[':prod_discount_with_install_pct2'] = $data['PROD_DISCOUNT_WITH_INSTALL_PCT2'];
+        }
+        if (isset($data['PROD_HAS_FREE_INSTALL_OPTION'])) {
+            $setClauses[] = "PROD_HAS_FREE_INSTALL_OPTION = :prod_has_free_install_option";
+            $params[':prod_has_free_install_option'] = $data['PROD_HAS_FREE_INSTALL_OPTION'];
         }
 
         if (empty($setClauses)) {

@@ -294,6 +294,31 @@ ob_start();
                                 <input type="file" class="form-control" id="productImage" name="productImage" accept="image/*">
                                 <div id="imagePreview" class="mt-2"></div>
                             </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="productHasFreeInstall" name="productHasFreeInstall" checked>
+                                    <label class="form-check-label" for="productHasFreeInstall">
+                                        Offer Free Installation Option
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-4" id="freeInstallDiscountContainer">
+                                    <label for="productDiscountFreeInstall" class="form-label">Free Install Discount (%)</label>
+                                    <input type="number" class="form-control" id="productDiscountFreeInstall" name="productDiscountFreeInstall" min="0" max="100" step="0.01" value="15">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="productDiscountWithInstall1" class="form-label">With Install Discount 1 (%)</label>
+                                    <input type="number" class="form-control" id="productDiscountWithInstall1" name="productDiscountWithInstall1" min="0" max="100" step="0.01" value="25">
+                                </div>
+                                <div class="col-md-4" id="withInstall2Container">
+                                    <label for="productDiscountWithInstall2" class="form-label">With Install Discount 2 (%)</label>
+                                    <input type="number" class="form-control" id="productDiscountWithInstall2" name="productDiscountWithInstall2" min="0" max="100" step="0.01" value="0">
+                                    <div class="form-text">Set to 0 to hide this option</div>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Features Tab -->
@@ -535,17 +560,52 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Generate variants HTML
         if (details.variants && details.variants.length > 0) {
-            variantsHtml = '<table class="nested-table"><thead><tr><th>Capacity</th><th>SRP Price</th><th>Free Install Price</th><th>With Install Price</th><th>Power Consumption</th></tr></thead><tbody>';
+            // Determine which pricing options to show based on product settings
+            const hasFreeInstall = details.prod_has_free_install_option !== false;
+            const hasSecondInstallOption = !hasFreeInstall && (details.prod_discount_with_install_pct2 || 0) > 0;
+            
+            // Build table header based on available options
+            let headerHtml = '<tr><th>Capacity</th><th>SRP Price</th>';
+            if (hasFreeInstall) {
+                headerHtml += '<th>Free Install Price</th>';
+                headerHtml += '<th>With Install Price</th>';
+            } else {
+                // Only show second option when free install is disabled
+                headerHtml += '<th>With Install Price' + (hasSecondInstallOption ? ' 1' : '') + '</th>';
+                if (hasSecondInstallOption) {
+                    headerHtml += '<th>With Install Price 2</th>';
+                }
+            }
+            headerHtml += '<th>Power Consumption</th></tr>';
+            
+            variantsHtml = '<table class="nested-table"><thead>' + headerHtml + '</thead><tbody>';
+            
+            // Generate rows with conditional columns
             details.variants.forEach(function(variant) {
-                variantsHtml += `
+                let rowHtml = `
                     <tr>
                         <td>${variant.var_capacity || 'N/A'}</td>
-                        <td>${variant.var_srp_price ? '₱' + parseFloat(variant.var_srp_price).toLocaleString() : 'N/A'}</td>
-                        <td>${variant.var_price_free_install ? '₱' + parseFloat(variant.var_price_free_install).toLocaleString() : 'N/A'}</td>
-                        <td>${variant.var_price_with_install ? '₱' + parseFloat(variant.var_price_with_install).toLocaleString() : 'N/A'}</td>
-                        <td>${variant.var_power_consumption || 'N/A'}</td>
-                    </tr>
-                `;
+                        <td>${variant.var_srp_price ? '₱' + parseFloat(variant.var_srp_price).toLocaleString() : 'N/A'}</td>`;
+                
+                // Handle pricing columns based on installation options
+                if (hasFreeInstall) {
+                    // When free installation is offered
+                    rowHtml += `<td>${variant.var_price_free_install ? '₱' + parseFloat(variant.var_price_free_install).toLocaleString() : 'N/A'}</td>`;
+                    rowHtml += `<td>${variant.var_price_with_install1 ? '₱' + parseFloat(variant.var_price_with_install1).toLocaleString() : 'N/A'}</td>`;
+                } else {
+                    // When free installation is not offered
+                    rowHtml += `<td>${variant.var_price_with_install1 ? '₱' + parseFloat(variant.var_price_with_install1).toLocaleString() : 'N/A'}</td>`;
+                    
+                    // Add second paid installation option if available
+                    if (hasSecondInstallOption) {
+                        rowHtml += `<td>${variant.var_price_with_install2 ? '₱' + parseFloat(variant.var_price_with_install2).toLocaleString() : 'N/A'}</td>`;
+                    }
+                }
+                
+                rowHtml += `<td>${variant.var_power_consumption || 'N/A'}</td>
+                    </tr>`;
+                    
+                variantsHtml += rowHtml;
             });
             variantsHtml += '</tbody></table>';
         } else {
@@ -604,7 +664,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Edit Product Button
     $(document).on('click', '.edit-btn', function() {
         const productId = $(this).data('id');
-        resetProductForm();
+        resetProductForm(); // This already resets all fields to editable state
         $('#productModalLabel').text('Edit Product');
         $('#productId').val(productId);
         
@@ -612,6 +672,17 @@ document.addEventListener('DOMContentLoaded', function() {
             // Fill in product details
             $('#productName').val(product.prod_name);
             $('#productDescription').val(product.prod_description);
+            
+            // Set discount fields and ensure they're editable
+            $('#productDiscountFreeInstall').val(product.prod_discount_free_install_pct || 15).prop('readonly', false);
+            $('#productDiscountWithInstall1').val(product.prod_discount_with_install_pct1 || 25).prop('readonly', false);
+            $('#productDiscountWithInstall2').val(product.prod_discount_with_install_pct2 || 0).prop('readonly', false);
+            $('#productHasFreeInstall')
+                .prop('checked', product.prod_has_free_install_option !== false)
+                .prop('disabled', false);
+            
+            // Update discount fields visibility based on product settings
+            updateDiscountFieldsVisibility();
             
             if (product.prod_image) {
                 $('#imagePreview').html(`<img src="/${product.prod_image}" class="preview-image" alt="Product Image">`);
@@ -638,8 +709,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         variant.var_id,
                         variant.var_capacity,
                         variant.var_srp_price,
-                        variant.var_discount_free_install_pct,
-                        variant.var_discount_with_install_pct,
                         variant.var_installation_fee,
                         variant.var_power_consumption
                     );
@@ -662,6 +731,15 @@ document.addEventListener('DOMContentLoaded', function() {
             $('#productName').val(product.prod_name).prop('readonly', true);
             $('#productDescription').val(product.prod_description).prop('readonly', true);
             $('#productImage').prop('disabled', true);
+            
+            // Set discount fields in read-only mode
+            $('#productDiscountFreeInstall').val(product.prod_discount_free_install_pct || 15).prop('readonly', true);
+            $('#productDiscountWithInstall1').val(product.prod_discount_with_install_pct1 || 25).prop('readonly', true);
+            $('#productDiscountWithInstall2').val(product.prod_discount_with_install_pct2 || 0).prop('readonly', true);
+            $('#productHasFreeInstall').prop('checked', product.prod_has_free_install_option !== false).prop('disabled', true);
+            
+            // Update discount fields visibility based on product settings
+            updateDiscountFieldsVisibility();
             
             if (product.prod_image) {
                 $('#imagePreview').html(`<img src="/${product.prod_image}" class="preview-image" alt="Product Image">`);
@@ -688,8 +766,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         variant.var_id,
                         variant.var_capacity,
                         variant.var_srp_price,
-                        variant.var_discount_free_install_pct,
-                        variant.var_discount_with_install_pct,
                         variant.var_installation_fee,
                         variant.var_power_consumption,
                         true
@@ -751,15 +827,87 @@ document.addEventListener('DOMContentLoaded', function() {
         // Reset form controls to editable state
         $('#productName').prop('readonly', false);
         $('#productDescription').prop('readonly', false);
+        $('#productImage').prop('disabled', false);
+        
+        // Reset discount fields to editable state
+        $('#productDiscountFreeInstall').prop('readonly', false);
+        $('#productDiscountWithInstall1').prop('readonly', false);
+        $('#productDiscountWithInstall2').prop('readonly', false);
+        $('#productHasFreeInstall').prop('disabled', false);
         
         // Show save button again
         $('#saveProductBtn').show();
         $('#productModal .modal-footer .btn-secondary').text('Cancel');
+        
+        // Update discount field visibility
+        updateDiscountFieldsVisibility();
     }
+    
+    // Function to update visibility of discount fields based on product settings
+    function updateDiscountFieldsVisibility() {
+        const hasFreeInstall = $('#productHasFreeInstall').is(':checked');
+        const withInstall2Value = parseFloat($('#productDiscountWithInstall2').val()) || 0;
+        
+        // Show/hide free installation discount field
+        $('#freeInstallDiscountContainer').toggle(hasFreeInstall);
+        
+        // Show/hide the second install discount field based on free installation option
+        $('#withInstall2Container').toggle(!hasFreeInstall);
+        
+        // If we're hiding the second discount field and it has a value, reset it to 0
+        if (hasFreeInstall && withInstall2Value > 0) {
+            $('#productDiscountWithInstall2').val(0);
+        }
+        
+        // Update the label for install discount 1
+        const label1 = hasFreeInstall ? 'With Install Discount (%)' : 
+                       withInstall2Value > 0 ? 'With Install Discount 1 (%)' : 'With Install Discount (%)';
+        $('#productDiscountWithInstall1').closest('.col-md-4').find('label').text(label1);
+    }
+    
+    // Toggle discount field visibility when checkbox is clicked
+    $('#productHasFreeInstall').on('change', updateDiscountFieldsVisibility);
+    
+    // Also update visibility when discount 2 value changes
+    $('#productDiscountWithInstall2').on('input', updateDiscountFieldsVisibility);
     
     // Reset form when modal is closed
     $('#productModal').on('hidden.bs.modal', function() {
         resetProductForm();
+    });
+    
+    // Initialize form when modal is shown
+    $('#productModal').on('shown.bs.modal', function() {
+        // Force re-enable inputs that might have been disabled in view mode
+        $('#productName').prop('readonly', false);
+        $('#productDescription').prop('readonly', false);
+        $('#productImage').prop('disabled', false);
+        $('#productDiscountFreeInstall').prop('readonly', false);
+        $('#productDiscountWithInstall1').prop('readonly', false);
+        $('#productDiscountWithInstall2').prop('readonly', false);
+        $('#productHasFreeInstall').prop('disabled', false);
+        
+        // Only disable in view mode
+        if ($('#saveProductBtn').css('display') === 'none') {
+            $('#productName').prop('readonly', true);
+            $('#productDescription').prop('readonly', true);
+            $('#productImage').prop('disabled', true);
+            $('#productDiscountFreeInstall').prop('readonly', true);
+            $('#productDiscountWithInstall1').prop('readonly', true);
+            $('#productDiscountWithInstall2').prop('readonly', true);
+            $('#productHasFreeInstall').prop('disabled', true);
+        }
+        
+        updateDiscountFieldsVisibility();
+    });
+    
+    // Event listener for the checkbox to ensure it works correctly
+    $('#productHasFreeInstall').on('click', function() {
+        // If this click doesn't work due to disabled state, force update the state
+        if ($(this).prop('disabled')) {
+            $(this).prop('disabled', false);
+            return false; // Prevent default behavior and retry the click
+        }
     });
     
     // Validate product form
@@ -884,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', function() {
         addVariantRow();
     });
     
-    function addVariantRow(variantId = null, capacity = '', srpPrice = '', discountFreeInstallPct = '15', discountWithInstallPct = '25', installationFee = '', powerConsumption = '', readOnly = false) {
+    function addVariantRow(variantId = null, capacity = '', srpPrice = '', installationFee = '', powerConsumption = '', readOnly = false) {
         const variantRow = `
             <div class="variant-row card mb-3" ${variantId ? `data-id="${variantId}"` : ''}>
                 <div class="card-body">
@@ -913,21 +1061,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     
                     <div class="row mb-2">
-                        <div class="col-md-4">
-                            <label class="form-label">Free Install Discount (%)</label>
-                            <input type="number" class="form-control variant-discount-free-install" min="0" max="100" step="0.01" placeholder="e.g., 15.00" value="${discountFreeInstallPct || '15'}" ${readOnly ? 'readonly' : ''}>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">With Install Discount (%)</label>
-                            <input type="number" class="form-control variant-discount-with-install" min="0" max="100" step="0.01" placeholder="e.g., 25.00" value="${discountWithInstallPct || '25'}" ${readOnly ? 'readonly' : ''}>
-                        </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label">Installation Fee (₱)</label>
                             <input type="number" class="form-control variant-installation-fee" min="0" step="0.01" placeholder="e.g., 1500" value="${installationFee}" ${readOnly ? 'readonly' : ''}>
                         </div>
-                    </div>
-                    
-                    <div class="row">
                         <div class="col-md-6">
                             <label class="form-label">Power Consumption</label>
                             <input type="text" class="form-control variant-power-consumption" placeholder="e.g., 800W" value="${powerConsumption}" ${readOnly ? 'readonly' : ''}>
@@ -961,7 +1098,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add product details
         const productData = {
             PROD_NAME: $('#productName').val(),
-            PROD_DESCRIPTION: $('#productDescription').val()
+            PROD_DESCRIPTION: $('#productDescription').val(),
+            PROD_DISCOUNT_FREE_INSTALL_PCT: $('#productDiscountFreeInstall').val(),
+            PROD_DISCOUNT_WITH_INSTALL_PCT1: $('#productDiscountWithInstall1').val(),
+            PROD_DISCOUNT_WITH_INSTALL_PCT2: $('#productDiscountWithInstall2').val(),
+            PROD_HAS_FREE_INSTALL_OPTION: $('#productHasFreeInstall').is(':checked')
         };
         
         formData.append('product', JSON.stringify(productData));
@@ -1010,8 +1151,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const variantId = $(this).data('id');
             const capacity = $(this).find('.variant-capacity').val();
             const srpPrice = $(this).find('.variant-srp-price').val();
-            const discountFreeInstall = $(this).find('.variant-discount-free-install').val();
-            const discountWithInstall = $(this).find('.variant-discount-with-install').val();
             const installationFee = $(this).find('.variant-installation-fee').val();
             const powerConsumption = $(this).find('.variant-power-consumption').val();
             
@@ -1020,8 +1159,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     VAR_ID: variantId || null,
                     VAR_CAPACITY: capacity,
                     VAR_SRP_PRICE: srpPrice,
-                    VAR_DISCOUNT_FREE_INSTALL_PCT: discountFreeInstall || 0,
-                    VAR_DISCOUNT_WITH_INSTALL_PCT: discountWithInstall || 0,
                     VAR_INSTALLATION_FEE: installationFee || 0,
                     VAR_POWER_CONSUMPTION: powerConsumption || null
                 });

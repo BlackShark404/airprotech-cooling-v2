@@ -221,16 +221,45 @@ class ProductController extends BaseController
         // Debug: Log the received payload
         error_log("Product JSON: " . $productJson);
         
-        // Normalize field names to uppercase for database consistency
-        if (isset($payload['product']['prod_name'])) {
-            $payload['product']['PROD_NAME'] = $payload['product']['prod_name'];
-            unset($payload['product']['prod_name']);
-        }
-        
-        if (isset($payload['product']['prod_description'])) {
-            $payload['product']['PROD_DESCRIPTION'] = $payload['product']['prod_description'];
-            unset($payload['product']['prod_description']);
-        }
+            // Normalize field names to uppercase for database consistency
+    if (isset($payload['product']['prod_name'])) {
+        $payload['product']['PROD_NAME'] = $payload['product']['prod_name'];
+        unset($payload['product']['prod_name']);
+    }
+    
+    if (isset($payload['product']['prod_description'])) {
+        $payload['product']['PROD_DESCRIPTION'] = $payload['product']['prod_description'];
+        unset($payload['product']['prod_description']);
+    }
+    
+    // Handle new discount fields and free installation option flag
+    if (isset($payload['product']['prod_discount_free_install_pct'])) {
+        $payload['product']['PROD_DISCOUNT_FREE_INSTALL_PCT'] = $payload['product']['prod_discount_free_install_pct'];
+        unset($payload['product']['prod_discount_free_install_pct']);
+    } else {
+        $payload['product']['PROD_DISCOUNT_FREE_INSTALL_PCT'] = 15.00; // Default value
+    }
+    
+    if (isset($payload['product']['prod_discount_with_install_pct1'])) {
+        $payload['product']['PROD_DISCOUNT_WITH_INSTALL_PCT1'] = $payload['product']['prod_discount_with_install_pct1'];
+        unset($payload['product']['prod_discount_with_install_pct1']);
+    } else {
+        $payload['product']['PROD_DISCOUNT_WITH_INSTALL_PCT1'] = 25.00; // Default value
+    }
+    
+    if (isset($payload['product']['prod_discount_with_install_pct2'])) {
+        $payload['product']['PROD_DISCOUNT_WITH_INSTALL_PCT2'] = $payload['product']['prod_discount_with_install_pct2'];
+        unset($payload['product']['prod_discount_with_install_pct2']);
+    } else {
+        $payload['product']['PROD_DISCOUNT_WITH_INSTALL_PCT2'] = 0.00; // Default value
+    }
+    
+    if (isset($payload['product']['prod_has_free_install_option'])) {
+        $payload['product']['PROD_HAS_FREE_INSTALL_OPTION'] = $payload['product']['prod_has_free_install_option'];
+        unset($payload['product']['prod_has_free_install_option']);
+    } else {
+        $payload['product']['PROD_HAS_FREE_INSTALL_OPTION'] = true; // Default value
+    }
 
         // 2. Handle 'product_image' file upload
         if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
@@ -397,8 +426,6 @@ class ProductController extends BaseController
                     $fieldMappings = [
                         'VAR_CAPACITY' => ['var_capacity', 'VAR_CAPACITY'],
                         'VAR_SRP_PRICE' => ['var_srp_price', 'VAR_SRP_PRICE'],
-                        'VAR_DISCOUNT_FREE_INSTALL_PCT' => ['var_discount_free_install_pct', 'VAR_DISCOUNT_FREE_INSTALL_PCT'],
-                        'VAR_DISCOUNT_WITH_INSTALL_PCT' => ['var_discount_with_install_pct', 'VAR_DISCOUNT_WITH_INSTALL_PCT'],
                         'VAR_INSTALLATION_FEE' => ['var_installation_fee', 'VAR_INSTALLATION_FEE'],
                         'VAR_POWER_CONSUMPTION' => ['var_power_consumption', 'VAR_POWER_CONSUMPTION']
                     ];
@@ -517,19 +544,37 @@ class ProductController extends BaseController
             if (!empty($data['product'])) {
                 $productData = $data['product'];
                 
-                // Normalize product data keys to uppercase
-                if (isset($productData['prod_name'])) {
-                    $productData['PROD_NAME'] = $productData['prod_name'];
-                    unset($productData['prod_name']);
-                }
-                if (isset($productData['prod_description'])) {
-                    $productData['PROD_DESCRIPTION'] = $productData['prod_description'];
-                    unset($productData['prod_description']);
-                }
-                if (isset($productData['prod_image'])) {
-                    $productData['PROD_IMAGE'] = $productData['prod_image'];
-                    unset($productData['prod_image']);
-                }
+                            // Normalize product data keys to uppercase
+            if (isset($productData['prod_name'])) {
+                $productData['PROD_NAME'] = $productData['prod_name'];
+                unset($productData['prod_name']);
+            }
+            if (isset($productData['prod_description'])) {
+                $productData['PROD_DESCRIPTION'] = $productData['prod_description'];
+                unset($productData['prod_description']);
+            }
+            if (isset($productData['prod_image'])) {
+                $productData['PROD_IMAGE'] = $productData['prod_image'];
+                unset($productData['prod_image']);
+            }
+            
+            // Handle new discount fields
+            if (isset($productData['prod_discount_free_install_pct'])) {
+                $productData['PROD_DISCOUNT_FREE_INSTALL_PCT'] = $productData['prod_discount_free_install_pct'];
+                unset($productData['prod_discount_free_install_pct']);
+            }
+            if (isset($productData['prod_discount_with_install_pct1'])) {
+                $productData['PROD_DISCOUNT_WITH_INSTALL_PCT1'] = $productData['prod_discount_with_install_pct1'];
+                unset($productData['prod_discount_with_install_pct1']);
+            }
+            if (isset($productData['prod_discount_with_install_pct2'])) {
+                $productData['PROD_DISCOUNT_WITH_INSTALL_PCT2'] = $productData['prod_discount_with_install_pct2'];
+                unset($productData['prod_discount_with_install_pct2']);
+            }
+            if (isset($productData['prod_has_free_install_option'])) {
+                $productData['PROD_HAS_FREE_INSTALL_OPTION'] = $productData['prod_has_free_install_option'];
+                unset($productData['prod_has_free_install_option']);
+            }
                 
                 $this->productModel->updateProduct($id, $productData);
             }
@@ -624,8 +669,6 @@ class ProductController extends BaseController
                             'var_id' => 'VAR_ID',
                             'var_capacity' => 'VAR_CAPACITY',
                             'var_srp_price' => 'VAR_SRP_PRICE',
-                            'var_discount_free_install_pct' => 'VAR_DISCOUNT_FREE_INSTALL_PCT',
-                            'var_discount_with_install_pct' => 'VAR_DISCOUNT_WITH_INSTALL_PCT',
                             'var_installation_fee' => 'VAR_INSTALLATION_FEE',
                             'var_power_consumption' => 'VAR_POWER_CONSUMPTION'
                         ];

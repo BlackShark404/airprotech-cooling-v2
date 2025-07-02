@@ -22,17 +22,23 @@ class ProductVariantModel extends Model
 
     public function createVariant($data)
     {
-        $sql = "INSERT INTO {$this->table} (VAR_CAPACITY, VAR_SRP_PRICE, 
-                VAR_DISCOUNT_FREE_INSTALL_PCT, VAR_DISCOUNT_WITH_INSTALL_PCT, 
-                VAR_INSTALLATION_FEE, VAR_POWER_CONSUMPTION, PROD_ID)
-                VALUES (:capacity, :srp_price, :discount_free_install_pct, 
-                :discount_with_install_pct, :installation_fee, :power_consumption, :product_id)";
+        $sql = "INSERT INTO {$this->table} (
+                VAR_CAPACITY, 
+                VAR_SRP_PRICE, 
+                VAR_INSTALLATION_FEE, 
+                VAR_POWER_CONSUMPTION, 
+                PROD_ID
+            ) VALUES (
+                :capacity, 
+                :srp_price, 
+                :installation_fee, 
+                :power_consumption, 
+                :product_id
+            )";
         
         $params = [
             ':capacity' => $data['VAR_CAPACITY'],
             ':srp_price' => $data['VAR_SRP_PRICE'],
-            ':discount_free_install_pct' => $data['VAR_DISCOUNT_FREE_INSTALL_PCT'] ?? 0.00,
-            ':discount_with_install_pct' => $data['VAR_DISCOUNT_WITH_INSTALL_PCT'] ?? 0.00,
             ':installation_fee' => $data['VAR_INSTALLATION_FEE'] ?? 0.00,
             ':power_consumption' => $data['VAR_POWER_CONSUMPTION'] ?? null,
             ':product_id' => $data['PROD_ID']
@@ -55,16 +61,6 @@ class ProductVariantModel extends Model
         if (isset($data['VAR_SRP_PRICE'])) {
             $setClauses[] = "VAR_SRP_PRICE = :srp_price";
             $params[':srp_price'] = $data['VAR_SRP_PRICE'];
-        }
-        
-        if (array_key_exists('VAR_DISCOUNT_FREE_INSTALL_PCT', $data)) {
-            $setClauses[] = "VAR_DISCOUNT_FREE_INSTALL_PCT = :discount_free_install_pct";
-            $params[':discount_free_install_pct'] = $data['VAR_DISCOUNT_FREE_INSTALL_PCT'];
-        }
-        
-        if (array_key_exists('VAR_DISCOUNT_WITH_INSTALL_PCT', $data)) {
-            $setClauses[] = "VAR_DISCOUNT_WITH_INSTALL_PCT = :discount_with_install_pct";
-            $params[':discount_with_install_pct'] = $data['VAR_DISCOUNT_WITH_INSTALL_PCT'];
         }
         
         if (array_key_exists('VAR_INSTALLATION_FEE', $data)) {

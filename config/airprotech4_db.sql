@@ -346,21 +346,27 @@ EXECUTE FUNCTION create_role_specific_record();
 -- 2. Triggers for Computing discounts
 -- --------------------------------------
 CREATE OR REPLACE FUNCTION compute_variant_prices() RETURNS TRIGGER AS $$
+DECLARE
+  discount_free_install DECIMAL(5, 2);
+  discount_with_install1 DECIMAL(5, 2);
+  discount_with_install2 DECIMAL(5, 2);
 BEGIN
+  -- Get the discount rates from the product
   SELECT 
-    p.PROD_DISCOUNT_FREE_INSTALL_PCT,
-    p.PROD_DISCOUNT_WITH_INSTALL_PCT1,
-    p.PROD_DISCOUNT_WITH_INSTALL_PCT2
+    COALESCE(p.PROD_DISCOUNT_FREE_INSTALL_PCT, 0),
+    COALESCE(p.PROD_DISCOUNT_WITH_INSTALL_PCT1, 0),
+    COALESCE(p.PROD_DISCOUNT_WITH_INSTALL_PCT2, 0)
   INTO
-    NEW._discount1,
-    NEW._discount2,
-    NEW._discount3
+    discount_free_install,
+    discount_with_install1,
+    discount_with_install2
   FROM PRODUCT p
   WHERE p.PROD_ID = NEW.PROD_ID;
 
-  NEW.VAR_PRICE_FREE_INSTALL := NEW.VAR_SRP_PRICE * (1 - NEW._discount1 / 100);
-  NEW.VAR_PRICE_WITH_INSTALL1 := (NEW.VAR_SRP_PRICE * (1 - NEW._discount2 / 100)) + NEW.VAR_INSTALLATION_FEE;
-  NEW.VAR_PRICE_WITH_INSTALL2 := (NEW.VAR_SRP_PRICE * (1 - NEW._discount3 / 100)) + NEW.VAR_INSTALLATION_FEE;
+  -- Compute the final prices using the discount rates
+  NEW.VAR_PRICE_FREE_INSTALL := NEW.VAR_SRP_PRICE * (1 - discount_free_install / 100);
+  NEW.VAR_PRICE_WITH_INSTALL1 := (NEW.VAR_SRP_PRICE * (1 - discount_with_install1 / 100)) + NEW.VAR_INSTALLATION_FEE;
+  NEW.VAR_PRICE_WITH_INSTALL2 := (NEW.VAR_SRP_PRICE * (1 - discount_with_install2 / 100)) + NEW.VAR_INSTALLATION_FEE;
 
   RETURN NEW;
 END;
