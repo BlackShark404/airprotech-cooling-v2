@@ -4,13 +4,16 @@
 // Autoload dependencies
 require_once __DIR__ . '/../vendor/autoload.php';
 
+// Load application configuration
+$appConfig = require_once __DIR__ . '/../config/app.php';
+
 // Use necessary classes
 use AltoRouter as Router;
 use Core\AuthMiddleware;
 use Dotenv\Dotenv;
 
-// Set the timezone
-date_default_timezone_set('Asia/Manila'); 
+// Set the timezone from config
+date_default_timezone_set($appConfig['timezone'] ?? 'Asia/Manila'); 
 
 // Load environment variables
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../');

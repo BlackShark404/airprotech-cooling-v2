@@ -6,9 +6,20 @@ use Config\Database;
 
 class BaseController
 {   protected $pdo;
+    protected $appConfig;
+    protected $debugMode;
 
     public function __construct()
     {
+        // Start session if not already started
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Load application configuration
+        $this->appConfig = require_once __DIR__ . '/../../config/app.php';
+        $this->debugMode = $this->appConfig['debug'] ?? false;
+
         // Get the PDO connection from the Database singleton
         $this->pdo = Database::getInstance()->getConnection();
     }

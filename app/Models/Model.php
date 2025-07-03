@@ -6,6 +6,7 @@ use Config\Database;
 use PDO;
 use PDOException;
 use Exception;
+use Core\QueryProfiler;
 
 class Model
 {
@@ -50,15 +51,29 @@ class Model
                 $stmt->bindValue($key, $value, $paramType);
             }
             
+            // Start timing for query profiler
+            $startTime = microtime(true);
+            
             // Execute the query
             $stmt->execute();
             
+            // Get the result
+            $result = $fetchAll ? $stmt->fetchAll(PDO::FETCH_ASSOC) : $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            // End timing
+            $endTime = microtime(true);
+            
+            // Log query for profiling
+            QueryProfiler::logQuery(
+                $sql, 
+                $params, 
+                $startTime, 
+                $endTime, 
+                $stmt->rowCount()
+            );
+            
             // Return the results
-            if ($fetchAll) {
-                return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            } else {
-                return $stmt->fetch(PDO::FETCH_ASSOC);
-            }
+            return $result;
         } catch (PDOException $e) {
             // Log the error or handle it as needed
             error_log("Database query error: " . $e->getMessage() . " - SQL: " . $sql);
@@ -161,8 +176,26 @@ class Model
                 $stmt->bindValue($key, $value, $paramType);
             }
             
+            // Start timing for query profiler
+            $startTime = microtime(true);
+            
             $stmt->execute();
-            return $stmt->rowCount();
+            
+            // End timing
+            $endTime = microtime(true);
+            
+            $rowCount = $stmt->rowCount();
+            
+            // Log query for profiling
+            QueryProfiler::logQuery(
+                $sql, 
+                $params, 
+                $startTime, 
+                $endTime, 
+                $rowCount
+            );
+            
+            return $rowCount;
         } catch (PDOException $e) {
             error_log("Database execution error: " . $e->getMessage() . " - SQL: " . $sql);
             throw new Exception("Database execution failed: " . $e->getMessage());
