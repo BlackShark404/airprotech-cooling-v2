@@ -27,13 +27,17 @@ class ProductVariantModel extends Model
                 VAR_SRP_PRICE, 
                 VAR_INSTALLATION_FEE, 
                 VAR_POWER_CONSUMPTION, 
-                PROD_ID
+                PROD_ID,
+                VAR_CREATED_AT,
+                VAR_UPDATED_AT
             ) VALUES (
                 :capacity, 
                 :srp_price, 
                 :installation_fee, 
                 :power_consumption, 
-                :product_id
+                :product_id,
+                CURRENT_TIMESTAMP,
+                CURRENT_TIMESTAMP
             )";
         
         $params = [

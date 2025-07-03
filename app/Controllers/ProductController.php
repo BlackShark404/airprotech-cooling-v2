@@ -694,8 +694,8 @@ class ProductController extends BaseController
             $this->productBookingModel->beginTransaction();
             error_log("Started transaction for booking creation");
             
-            // Set default price type to free_install (admin will update later)
-            $priceType = 'free_install';
+            // Set default price type to free_installation (admin will update later)
+            $priceType = 'free_installation';
             
             // Set unit price to 0.00 - admin will update based on customer location and requirements
             $unitPrice = 0.00;
@@ -1036,9 +1036,9 @@ class ProductController extends BaseController
             
             if (!empty($data['priceType'])) {
                 // Validate price type
-                if (!in_array($data['priceType'], ['free_install', 'with_install'])) {
+                if (!in_array($data['priceType'], ['free_installation', 'with_installation1', 'with_installation2'])) {
                     $this->productBookingModel->rollback();
-                    $this->jsonError('Invalid price type. Must be "free_install" or "with_install"', 400);
+                    $this->jsonError('Invalid price type. Must be "free_installation", "with_installation1", or "with_installation2"', 400);
                     return;
                 }
                 $updateData['PB_PRICE_TYPE'] = $data['priceType'];

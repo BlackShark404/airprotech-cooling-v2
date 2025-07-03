@@ -15,7 +15,7 @@ if ($_SERVER['SERVER_NAME'] === 'localhost' ||
 // Enable query profiler in development mode
 if ($environment === 'development') {
     require_once __DIR__ . '/../core/QueryProfiler.php';
-    Core\QueryProfiler::enable();
+    Core\QueryProfiler::disable();
 }
 
 // Debug mode (shows detailed error messages)

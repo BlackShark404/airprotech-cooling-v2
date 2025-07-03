@@ -18,9 +18,12 @@ class ProductBookingModel extends Model
                     pv.VAR_CAPACITY,
                     pv.VAR_SRP_PRICE,
                     pv.VAR_PRICE_FREE_INSTALL,
-                    pv.VAR_PRICE_WITH_INSTALL,
+                    pv.VAR_PRICE_WITH_INSTALL1,
+                    pv.VAR_PRICE_WITH_INSTALL2,
+                    pv.VAR_INSTALLATION_FEE,
                     p.PROD_NAME,
-                    p.PROD_IMAGE
+                    p.PROD_IMAGE,
+                    p.PROD_HAS_FREE_INSTALL_OPTION
                 FROM {$this->table} pb
                 JOIN CUSTOMER c ON pb.PB_CUSTOMER_ID = c.CU_ACCOUNT_ID
                 JOIN USER_ACCOUNT ua ON c.CU_ACCOUNT_ID = ua.UA_ID
@@ -49,9 +52,12 @@ class ProductBookingModel extends Model
                         pv.VAR_CAPACITY,
                         pv.VAR_SRP_PRICE,
                         pv.VAR_PRICE_FREE_INSTALL,
-                        pv.VAR_PRICE_WITH_INSTALL,
+                        pv.VAR_PRICE_WITH_INSTALL1,
+                        pv.VAR_PRICE_WITH_INSTALL2,
+                        pv.VAR_INSTALLATION_FEE,
                         p.PROD_NAME,
                         p.PROD_IMAGE,
+                        p.PROD_HAS_FREE_INSTALL_OPTION,
                         pb.PB_CUSTOMER_ID
                     FROM {$this->table} pb
                     LEFT JOIN CUSTOMER c ON pb.PB_CUSTOMER_ID = c.CU_ACCOUNT_ID
@@ -90,9 +96,12 @@ class ProductBookingModel extends Model
                     pv.VAR_CAPACITY,
                     pv.VAR_SRP_PRICE,
                     pv.VAR_PRICE_FREE_INSTALL,
-                    pv.VAR_PRICE_WITH_INSTALL,
+                    pv.VAR_PRICE_WITH_INSTALL1,
+                    pv.VAR_PRICE_WITH_INSTALL2,
+                    pv.VAR_INSTALLATION_FEE,
                     p.PROD_NAME,
-                    p.PROD_IMAGE
+                    p.PROD_IMAGE,
+                    p.PROD_HAS_FREE_INSTALL_OPTION
                 FROM {$this->table} pb
                 JOIN PRODUCT_VARIANT pv ON pb.PB_VARIANT_ID = pv.VAR_ID
                 JOIN PRODUCT p ON pv.PROD_ID = p.PROD_ID
@@ -139,7 +148,7 @@ class ProductBookingModel extends Model
             ':quantity' => $data['PB_QUANTITY'],
             ':unit_price' => $data['PB_UNIT_PRICE'],
             ':status' => $data['PB_STATUS'] ?? 'pending',
-            ':price_type' => $data['PB_PRICE_TYPE'] ?? 'free_install',
+            ':price_type' => $data['PB_PRICE_TYPE'] ?? 'free_installation',
             ':preferred_date' => $data['PB_PREFERRED_DATE'],
             ':preferred_time' => $data['PB_PREFERRED_TIME'],
             ':address' => $data['PB_ADDRESS'],
@@ -323,7 +332,9 @@ class ProductBookingModel extends Model
                     pv.VAR_CAPACITY,
                     pv.VAR_SRP_PRICE,
                     pv.VAR_PRICE_FREE_INSTALL,
-                    pv.VAR_PRICE_WITH_INSTALL,
+                    pv.VAR_PRICE_WITH_INSTALL1,
+                    pv.VAR_PRICE_WITH_INSTALL2,
+                    pv.VAR_INSTALLATION_FEE,
                     p.PROD_NAME,
                     p.PROD_IMAGE
                 FROM {$this->table} pb

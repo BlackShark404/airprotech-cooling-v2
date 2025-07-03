@@ -59,7 +59,11 @@ class ProductManager {
             const allVariants = product.variants || [];
 
             // Check if any variants have stock
-            const variantsWithStock = allVariants.filter(v => (v.INVENTORY_QUANTITY || 0) > 0);
+            const variantsWithStock = allVariants.filter(v => {
+                // Get inventory quantity, considering both camelCase and snake_case property names
+                const inventoryQty = v.inventory_quantity || v.INVENTORY_QUANTITY || 0;
+                return parseInt(inventoryQty) > 0;
+            });
             const hasVariantsWithStock = variantsWithStock.length > 0;
 
             // Calculate price range from variants' SRP prices
@@ -92,7 +96,8 @@ class ProductManager {
             if (allVariants.length > 0) {
                 const capacities = allVariants.map(v => {
                     const capacity = v.VAR_CAPACITY || v.var_capacity;
-                    const quantity = v.INVENTORY_QUANTITY || 0;
+                    // Get inventory quantity, handling both camelCase and snake_case
+                    const quantity = parseInt(v.inventory_quantity || v.INVENTORY_QUANTITY || 0);
                     const badgeClass = quantity > 0 ? 'bg-success' : 'bg-danger';
                     return `<span class="variant-badge" title="${quantity > 0 ? quantity + ' units in stock' : 'Out of stock'}">${capacity} <span class="badge ${badgeClass}">${quantity > 0 ? quantity : 'Out'}</span></span>`;
                 }).join(' ');
@@ -498,7 +503,7 @@ class ProductManager {
 
         if (!variant) return;
 
-        const inventory = variant.INVENTORY_QUANTITY || 0;
+        const inventory = parseInt(variant.inventory_quantity || variant.INVENTORY_QUANTITY || 0);
 
         // Show "To be determined" message for price
         if (this.modal.price) {
@@ -897,7 +902,7 @@ class ProductManager {
         // Determine availability based on inventory
         const hasInventory = (product.inventory_count > 0) ||
             (product.variants && Array.isArray(product.variants) &&
-                product.variants.some(v => (v.INVENTORY_QUANTITY || 0) > 0));
+                product.variants.some(v => parseInt(v.inventory_quantity || v.INVENTORY_QUANTITY || 0) > 0));
 
         // Update the modal title and product name
         if (this.modal.title) this.modal.title.textContent = `${productName}`;
@@ -944,7 +949,7 @@ class ProductManager {
             variants.forEach(variant => {
                 const variantId = variant.VAR_ID || variant.var_id;
                 const capacity = variant.VAR_CAPACITY || variant.var_capacity;
-                const inventory = variant.INVENTORY_QUANTITY || 0;
+                const inventory = parseInt(variant.inventory_quantity || variant.INVENTORY_QUANTITY || 0);
 
                 // Create option element
                 const option = document.createElement('option');
@@ -984,45 +989,90 @@ class ProductManager {
         // Populate variants table
         const variantsTable = document.getElementById('modal-variants-table');
         if (variantsTable) {
+            // Clear the table
             variantsTable.innerHTML = '';
 
+            // Get the free installation option flag from the product
+            const hasFreeInstallOption = product.PROD_HAS_FREE_INSTALL_OPTION || product.prod_has_free_install_option || false;
+            
+            // Get discount percentages from the product
+            const freeInstallDiscount = parseFloat(product.PROD_DISCOUNT_FREE_INSTALL_PCT || product.prod_discount_free_install_pct || 0).toFixed(2);
+            const withInstall1Discount = parseFloat(product.PROD_DISCOUNT_WITH_INSTALL_PCT1 || product.prod_discount_with_install_pct1 || 0).toFixed(2);
+            const withInstall2Discount = parseFloat(product.PROD_DISCOUNT_WITH_INSTALL_PCT2 || product.prod_discount_with_install_pct2 || 0).toFixed(2);
+            
+            // Create table header based on free installation option
+            const tableHeader = document.createElement('thead');
+            tableHeader.className = 'table-light';
+            if (hasFreeInstallOption) {
+                tableHeader.innerHTML = `
+                    <tr>
+                        <th>Capacity</th>
+                        <th>SRP Price</th>
+                        <th>Free Installation (${freeInstallDiscount}% off)</th>
+                        <th>With Installation 1 (${withInstall1Discount}% off)</th>
+                    </tr>
+                `;
+            } else {
+                tableHeader.innerHTML = `
+                    <tr>
+                        <th>Capacity</th>
+                        <th>SRP Price</th>
+                        <th>With Installation 1 (${withInstall1Discount}% off)</th>
+                        <th>With Installation 2 (${withInstall2Discount}% off)</th>
+                    </tr>
+                `;
+            }
+            
+            // Append header to table
+            variantsTable.appendChild(tableHeader);
+            
+            // Create table body
+            const tableBody = document.createElement('tbody');
+            
             if (variants.length > 0) {
                 variants.forEach(variant => {
                     const variantId = variant.VAR_ID || variant.var_id;
                     const capacity = variant.VAR_CAPACITY || variant.var_capacity;
                     const srp = parseFloat(variant.VAR_SRP_PRICE || variant.var_srp_price || '0.00');
-                    const inventory = variant.INVENTORY_QUANTITY || 0;
+                    const inventory = parseInt(variant.inventory_quantity || variant.INVENTORY_QUANTITY || 0);
 
-                    // Get the free install and with install prices
-                    const discountFreeInstallPct = parseFloat(variant.VAR_DISCOUNT_FREE_INSTALL_PCT || variant.var_discount_free_install_pct || '0.00');
-                    const discountWithInstallPct = parseFloat(variant.VAR_DISCOUNT_WITH_INSTALL_PCT || variant.var_discount_with_install_pct || '0.00');
-                    const installationFee = parseFloat(variant.VAR_INSTALLATION_FEE || variant.var_installation_fee || '0.00');
-
-                    // Calculate or get computed prices
-                    let freeInstallPrice = variant.VAR_PRICE_FREE_INSTALL || variant.var_price_free_install;
-                    if (!freeInstallPrice) {
-                        freeInstallPrice = srp * (1 - discountFreeInstallPct / 100);
-                    }
-
-                    let withInstallPrice = variant.VAR_PRICE_WITH_INSTALL || variant.var_price_with_install;
-                    if (!withInstallPrice) {
-                        withInstallPrice = (srp * (1 - discountWithInstallPct / 100)) + installationFee;
-                    }
+                    // Get the computed prices from the variant
+                    const freeInstallPrice = parseFloat(variant.VAR_PRICE_FREE_INSTALL || variant.var_price_free_install || '0.00');
+                    const withInstall1Price = parseFloat(variant.VAR_PRICE_WITH_INSTALL1 || variant.var_price_with_install1 || '0.00');
+                    const withInstall2Price = parseFloat(variant.VAR_PRICE_WITH_INSTALL2 || variant.var_price_with_install2 || '0.00');
 
                     const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${capacity}</td>
-                        <td>₱${srp.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td>₱${parseFloat(freeInstallPrice).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td>₱${parseFloat(withInstallPrice).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    `;
-                    variantsTable.appendChild(row);
+                    
+                    if (hasFreeInstallOption) {
+                        row.innerHTML = `
+                            <td>${capacity}</td>
+                            <td>₱${srp.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td>₱${freeInstallPrice.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td>₱${withInstall1Price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        `;
+                    } else {
+                        row.innerHTML = `
+                            <td>${capacity}</td>
+                            <td>₱${srp.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td>₱${withInstall1Price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td>${withInstall2Price > 0 ? 
+                                '₱' + withInstall2Price.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 
+                                '<span class="text-muted">Not available</span>'}
+                            </td>
+                        `;
+                    }
+                    
+                    tableBody.appendChild(row);
                 });
             } else {
                 const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="4" class="text-center">No variants available for this product.</td>`;
-                variantsTable.appendChild(row);
+                const colSpan = hasFreeInstallOption ? 4 : 4; // Both cases have 4 columns
+                row.innerHTML = `<td colspan="${colSpan}" class="text-center">No variants available for this product.</td>`;
+                tableBody.appendChild(row);
             }
+            
+            // Append the table body to the table
+            variantsTable.appendChild(tableBody);
         }
 
         // Update price display based on the first variant
@@ -1137,7 +1187,7 @@ class ProductManager {
             console.log('Using product inventory data (only counting Regular inventory type)');
             let total = 0;
             this.currentProduct.inventory.forEach(inv => {
-                const invVariantId = inv.VAR_ID || inv.var_id;
+                const invVariantId = parseInt(inv.VAR_ID || inv.var_id);
                 const invType = inv.INVE_TYPE || inv.inve_type || '';
                 if (invVariantId === variantId && invType === 'Regular') {
                     const quantity = parseInt(inv.QUANTITY || inv.quantity || 0);
@@ -1147,6 +1197,13 @@ class ProductManager {
 
             console.log('Calculated total from regular inventory:', total);
             return total;
+        }
+
+        // If no detailed inventory but the variant has an inventory_quantity property, use that
+        const directInventory = parseInt(variant.inventory_quantity || variant.INVENTORY_QUANTITY || 0);
+        if (directInventory > 0) {
+            console.log('Using direct variant inventory quantity:', directInventory);
+            return directInventory;
         }
 
         // Absolute fallback

@@ -529,18 +529,8 @@
                                 <!-- Variants Tab -->
                                 <div class="tab-pane fade" id="variants-content" role="tabpanel" aria-labelledby="variants-tab">
                                     <div class="table-responsive">
-                                        <table class="table table-hover table-bordered">
-                                            <thead class="table-light">
-                                                <tr>
-                                                    <th>Capacity</th>
-                                                    <th>SRP</th>
-                                                    <th>15% Free Installation</th>
-                                                    <th>25% With Installation Fee</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="modal-variants-table">
-                                                <!-- Variants will be added dynamically -->
-                                            </tbody>
+                                        <table class="table table-hover table-bordered" id="modal-variants-table">
+                                            <!-- Table content is dynamically created in ProductManager.js -->
                                         </table>
                                     </div>
                                     <div class="alert alert-info mt-3">
