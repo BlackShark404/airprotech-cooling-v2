@@ -8,8 +8,61 @@ class ProductModel extends Model
 
     public function getAllProducts()
     {
-        $sql = "SELECT * FROM {$this->table} WHERE PROD_DELETED_AT IS NULL ORDER BY PROD_CREATED_AT DESC";
-        return $this->query($sql);
+        $sql = "SELECT 
+                    p.*,
+                    (SELECT COALESCE(JSON_AGG(
+                        json_build_object(
+                            'var_id', v.VAR_ID,
+                            'var_capacity', v.VAR_CAPACITY,
+                            'var_srp_price', v.VAR_SRP_PRICE,
+                            'var_price_free_install', v.VAR_PRICE_FREE_INSTALL,
+                            'var_price_with_install1', v.VAR_PRICE_WITH_INSTALL1,
+                            'var_price_with_install2', v.VAR_PRICE_WITH_INSTALL2,
+                            'var_installation_fee', v.VAR_INSTALLATION_FEE,
+                            'var_power_consumption', v.VAR_POWER_CONSUMPTION,
+                            'inventory_quantity', COALESCE(
+                                (SELECT SUM(i.QUANTITY) 
+                                 FROM INVENTORY i 
+                                 WHERE i.VAR_ID = v.VAR_ID 
+                                 AND i.INVE_DELETED_AT IS NULL
+                                 GROUP BY i.VAR_ID),
+                                0
+                            )
+                        )
+                    ), '[]'::json)
+                    FROM PRODUCT_VARIANT v 
+                    WHERE v.PROD_ID = p.PROD_ID 
+                    AND v.VAR_DELETED_AT IS NULL) AS variants
+                FROM {$this->table} p
+                WHERE p.PROD_DELETED_AT IS NULL 
+                ORDER BY p.PROD_CREATED_AT DESC";
+        
+        $products = $this->query($sql);
+        
+        // Process the products to transform the JSON data
+        foreach ($products as &$product) {
+            if (isset($product['variants'])) {
+                $product['variants'] = json_decode($product['variants'], true) ?: [];
+                
+                // Calculate HAS_INVENTORY and inventory_count
+                $product['HAS_INVENTORY'] = false;
+                $product['inventory_count'] = 0;
+                
+                foreach ($product['variants'] as $variant) {
+                    $inventoryQuantity = isset($variant['inventory_quantity']) ? (int)$variant['inventory_quantity'] : 0;
+                    $product['inventory_count'] += $inventoryQuantity;
+                    if ($inventoryQuantity > 0) {
+                        $product['HAS_INVENTORY'] = true;
+                    }
+                }
+            } else {
+                $product['variants'] = [];
+                $product['HAS_INVENTORY'] = false;
+                $product['inventory_count'] = 0;
+            }
+        }
+        
+        return $products;
     }
 
     public function getProductById($productId)
@@ -118,20 +171,108 @@ class ProductModel extends Model
 
     public function getProductWithDetails($productId)
     {
-        $product = $this->getProductById($productId);
-        if (!$product) {
+        $sql = "SELECT 
+                    p.*,
+                    (SELECT COALESCE(JSON_AGG(f.*), '[]'::json)
+                    FROM PRODUCT_FEATURE f 
+                    WHERE f.PROD_ID = p.PROD_ID 
+                    AND f.FEATURE_DELETED_AT IS NULL) AS features,
+                    
+                    (SELECT COALESCE(JSON_AGG(s.*), '[]'::json)
+                    FROM PRODUCT_SPEC s 
+                    WHERE s.PROD_ID = p.PROD_ID 
+                    AND s.SPEC_DELETED_AT IS NULL) AS specs,
+                    
+                    (SELECT COALESCE(JSON_AGG(
+                        json_build_object(
+                            'var_id', v.VAR_ID,
+                            'var_capacity', v.VAR_CAPACITY,
+                            'var_srp_price', v.VAR_SRP_PRICE,
+                            'var_price_free_install', v.VAR_PRICE_FREE_INSTALL,
+                            'var_price_with_install1', v.VAR_PRICE_WITH_INSTALL1,
+                            'var_price_with_install2', v.VAR_PRICE_WITH_INSTALL2,
+                            'var_installation_fee', v.VAR_INSTALLATION_FEE,
+                            'var_power_consumption', v.VAR_POWER_CONSUMPTION,
+                            'inventory_quantity', COALESCE(
+                                (SELECT SUM(i.QUANTITY) 
+                                 FROM INVENTORY i 
+                                 WHERE i.VAR_ID = v.VAR_ID 
+                                 AND i.INVE_DELETED_AT IS NULL
+                                 GROUP BY i.VAR_ID),
+                                0
+                            ),
+                            'inventory', (
+                                SELECT COALESCE(JSON_AGG(
+                                    json_build_object(
+                                        'inve_id', i.INVE_ID,
+                                        'whouse_id', i.WHOUSE_ID,
+                                        'inve_type', i.INVE_TYPE,
+                                        'quantity', i.QUANTITY,
+                                        'whouse_name', w.WHOUSE_NAME,
+                                        'whouse_location', w.WHOUSE_LOCATION
+                                    )
+                                ), '[]'::json)
+                                FROM INVENTORY i
+                                JOIN WAREHOUSE w ON i.WHOUSE_ID = w.WHOUSE_ID
+                                WHERE i.VAR_ID = v.VAR_ID
+                                AND i.INVE_DELETED_AT IS NULL
+                                AND w.WHOUSE_DELETED_AT IS NULL
+                            )
+                        )
+                    ), '[]'::json)
+                    FROM PRODUCT_VARIANT v 
+                    WHERE v.PROD_ID = p.PROD_ID 
+                    AND v.VAR_DELETED_AT IS NULL) AS variants,
+                    
+                    (SELECT COALESCE(JSON_AGG(
+                        json_build_object(
+                            'inve_id', i.INVE_ID,
+                            'var_id', i.VAR_ID,
+                            'whouse_id', i.WHOUSE_ID,
+                            'inve_type', i.INVE_TYPE,
+                            'quantity', i.QUANTITY,
+                            'var_capacity', v.VAR_CAPACITY,
+                            'whouse_name', w.WHOUSE_NAME,
+                            'whouse_location', w.WHOUSE_LOCATION
+                        )
+                    ), '[]'::json)
+                    FROM INVENTORY i
+                    JOIN PRODUCT_VARIANT v ON i.VAR_ID = v.VAR_ID
+                    JOIN WAREHOUSE w ON i.WHOUSE_ID = w.WHOUSE_ID
+                    WHERE v.PROD_ID = p.PROD_ID
+                    AND i.INVE_DELETED_AT IS NULL
+                    AND v.VAR_DELETED_AT IS NULL
+                    AND w.WHOUSE_DELETED_AT IS NULL) AS inventory
+                    
+                FROM {$this->table} p
+                WHERE p.PROD_ID = :product_id 
+                AND p.PROD_DELETED_AT IS NULL";
+        
+        $result = $this->queryOne($sql, [':product_id' => $productId]);
+        
+        if (!$result) {
             return null;
         }
-
-        $productFeatureModel = new ProductFeatureModel();
-        $productSpecModel = new ProductSpecModel();
-        $productVariantModel = new ProductVariantModel();
-
-        $product['features'] = $productFeatureModel->getFeaturesByProductId($productId);
-        $product['specs'] = $productSpecModel->getSpecsByProductId($productId);
-        $product['variants'] = $productVariantModel->getVariantsByProductId($productId);
-
-        return $product;
+        
+        // Convert JSON strings to arrays
+        $result['features'] = json_decode($result['features'], true) ?: [];
+        $result['specs'] = json_decode($result['specs'], true) ?: [];
+        $result['variants'] = json_decode($result['variants'], true) ?: [];
+        $result['inventory'] = json_decode($result['inventory'], true) ?: [];
+        
+        // Calculate inventory statistics
+        $result['HAS_INVENTORY'] = false;
+        $result['inventory_count'] = 0;
+        
+        foreach ($result['variants'] as $variant) {
+            $inventoryQuantity = isset($variant['inventory_quantity']) ? (int)$variant['inventory_quantity'] : 0;
+            $result['inventory_count'] += $inventoryQuantity;
+            if ($inventoryQuantity > 0) {
+                $result['HAS_INVENTORY'] = true;
+            }
+        }
+        
+        return $result;
     }
     
     // Get summary statistics for products

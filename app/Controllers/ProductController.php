@@ -38,104 +38,6 @@ class ProductController extends BaseController
     public function getAllProducts()
     {
         $products = $this->productModel->getAllProducts();
-        $debug = [];
-        
-        // Process each product to add variant and inventory information
-        foreach ($products as &$product) {
-            // Get product ID, accounting for both uppercase and lowercase keys
-            $productId = null;
-            if (isset($product['PROD_ID'])) {
-                $productId = $product['PROD_ID'];
-            } elseif (isset($product['prod_id'])) {
-                $productId = $product['prod_id'];
-                // Also add uppercase version for consistency in later usage
-                $product['PROD_ID'] = $productId;
-            }
-            
-            // Skip this product if ID is missing
-            if (!$productId) {
-                continue;
-            }
-            
-            // Get variants for this product
-            $variants = $this->productVariantModel->getVariantsByProductId($productId);
-            
-            // Initialize array for variants with inventory info
-            $variantsWithInventory = [];
-            $variantIds = [];
-            
-            // Get all variant IDs for this product
-            foreach ($variants as $variant) {
-                // Account for both uppercase and lowercase keys
-                $varId = null;
-                if (isset($variant['VAR_ID'])) {
-                    $varId = $variant['VAR_ID'];
-                } elseif (isset($variant['var_id'])) {
-                    $varId = $variant['var_id'];
-                    // Add uppercase version for consistency
-                    $variant['VAR_ID'] = $varId;
-                }
-                
-                if ($varId) {
-                    $variantIds[] = $varId;
-                }
-            }
-            
-            if (!empty($variantIds)) {
-                // Get inventory data for all variants of this product
-                $inventoryItems = $this->inventoryModel->getInventoryByVariantIds($variantIds);
-                $variantInventoryMap = [];
-                
-                // Group inventory by variant ID and calculate total quantity
-                foreach ($inventoryItems as $item) {
-                    // Account for both uppercase and lowercase keys
-                    $varId = isset($item['VAR_ID']) ? $item['VAR_ID'] : ($item['var_id'] ?? null);
-                    if (!$varId) continue;
-                    
-                    if (!isset($variantInventoryMap[$varId])) {
-                        $variantInventoryMap[$varId] = 0;
-                    }
-                    
-                    // Account for both uppercase and lowercase keys
-                    $quantity = isset($item['QUANTITY']) ? (int)$item['QUANTITY'] : (int)($item['quantity'] ?? 0);
-                    $variantInventoryMap[$varId] += $quantity;
-                }
-                
-                // Process all variants and add inventory quantities
-                foreach ($variants as $variant) {
-                    // Account for both uppercase and lowercase keys
-                    $varId = isset($variant['VAR_ID']) ? $variant['VAR_ID'] : ($variant['var_id'] ?? null);
-                    if (!$varId) continue;
-                    
-                    // Add inventory quantity (default to 0 if not in inventory)
-                    $variant['INVENTORY_QUANTITY'] = $variantInventoryMap[$varId] ?? 0;
-                    $variantsWithInventory[] = $variant;
-                }
-            }
-            
-            // Add all variants to the product, regardless of inventory
-            $product['variants'] = $variantsWithInventory;
-            
-            // Flag if product has variants with inventory > 0
-            $product['HAS_INVENTORY'] = count(array_filter($variantsWithInventory, function($v) {
-                return ($v['INVENTORY_QUANTITY'] ?? 0) > 0;
-            })) > 0;
-            
-            // Calculate total inventory count for the product
-            $product['inventory_count'] = array_reduce($variantsWithInventory, function($total, $variant) {
-                return $total + ($variant['INVENTORY_QUANTITY'] ?? 0);
-            }, 0);
-            
-            $debug[] = [
-                'product_id' => $productId,
-                'variant_count' => count($variants),
-                'variants_with_inventory' => count($variantsWithInventory),
-                'has_inventory' => $product['HAS_INVENTORY'],
-                'inventory_count' => $product['inventory_count']
-            ];
-        }
-        
-        // Show all products without filtering - the frontend will handle showing inventory availability
         $this->jsonSuccess($products);
     }
 
@@ -148,51 +50,8 @@ class ProductController extends BaseController
             return;
         }
 
-        // Get inventory information
-        $product['inventory'] = $this->inventoryModel->getProductInventory($id);
-        
-        // Add inventory quantity to each variant
-        if (isset($product['variants']) && is_array($product['variants'])) {
-            $variantIds = [];
-            foreach ($product['variants'] as &$variant) {
-                // Get variant ID (handling both uppercase and lowercase keys)
-                $varId = isset($variant['VAR_ID']) ? $variant['VAR_ID'] : ($variant['var_id'] ?? null);
-                if ($varId) {
-                    $variantIds[] = $varId;
-                }
-            }
-            
-            if (!empty($variantIds)) {
-                // Get inventory data for all variants
-                $inventoryItems = $this->inventoryModel->getInventoryByVariantIds($variantIds);
-                $variantInventoryMap = [];
-                
-                // Group inventory by variant ID and calculate total quantity
-                foreach ($inventoryItems as $item) {
-                    // Handle both uppercase and lowercase keys
-                    $varId = isset($item['VAR_ID']) ? $item['VAR_ID'] : ($item['var_id'] ?? null);
-                    if (!$varId) continue;
-                    
-                    if (!isset($variantInventoryMap[$varId])) {
-                        $variantInventoryMap[$varId] = 0;
-                    }
-                    
-                    // Handle both uppercase and lowercase 'quantity' keys
-                    $quantity = isset($item['QUANTITY']) ? (int)$item['QUANTITY'] : (int)($item['quantity'] ?? 0);
-                    $variantInventoryMap[$varId] += $quantity;
-                }
-                
-                // Add inventory quantities to each variant
-                foreach ($product['variants'] as &$variant) {
-                    $varId = isset($variant['VAR_ID']) ? $variant['VAR_ID'] : ($variant['var_id'] ?? null);
-                    if ($varId) {
-                        $variant['INVENTORY_QUANTITY'] = $variantInventoryMap[$varId] ?? 0;
-                    } else {
-                        $variant['INVENTORY_QUANTITY'] = 0;
-                    }
-                }
-            }
-        }
+        // Since our improved getProductWithDetails already includes variants with inventory data,
+        // we don't need to make additional queries here
         
         $this->jsonSuccess($product);
     }
