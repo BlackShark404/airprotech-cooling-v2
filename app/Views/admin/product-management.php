@@ -567,13 +567,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Build table header based on available options
             let headerHtml = '<tr><th>Capacity</th><th>SRP Price</th>';
             if (hasFreeInstall) {
-                headerHtml += '<th>Free Install Price</th>';
-                headerHtml += '<th>With Install Price</th>';
+                headerHtml += `<th>Free Install Price (${details.prod_discount_free_install_pct || 0}%)</th>`;
+                headerHtml += `<th>With Install Price (${details.prod_discount_with_install_pct1 || 0}%)</th>`;
             } else {
                 // Only show second option when free install is disabled
-                headerHtml += '<th>With Install Price' + (hasSecondInstallOption ? ' 1' : '') + '</th>';
+                headerHtml += `<th>With Install Price${hasSecondInstallOption ? ' 1' : ''} (${details.prod_discount_with_install_pct1 || 0}%)</th>`;
                 if (hasSecondInstallOption) {
-                    headerHtml += '<th>With Install Price 2</th>';
+                    headerHtml += `<th>With Install Price 2 (${details.prod_discount_with_install_pct2 || 0}%)</th>`;
                 }
             }
             headerHtml += '<th>Power Consumption</th></tr>';

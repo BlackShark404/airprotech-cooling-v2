@@ -240,6 +240,7 @@ CREATE TABLE PRODUCT_BOOKING (
     PB_STATUS           VARCHAR(20) DEFAULT 'pending',
     PB_INVENTORY_DEDUCTED BOOLEAN DEFAULT FALSE,
     PB_WAREHOUSE_ID     INT,  -- The warehouse from which the products will be taken
+    PB_HAS_FREE_INSTALL_OPTION BOOLEAN, -- Stores whether free installation was available for this product
 
     -- Updated to clarify all installation options:
     -- 'free_installation' - Installation is free (uses VAR_PRICE_FREE_INSTALL)
@@ -414,6 +415,9 @@ BEGIN
         JOIN PRODUCT ON PRODUCT_VARIANT.PROD_ID = PRODUCT.PROD_ID
         WHERE VAR_ID = NEW.PB_VARIANT_ID;
         
+        -- Store the free installation option flag from the product
+        NEW.PB_HAS_FREE_INSTALL_OPTION := has_free_install;
+        
         -- Validate the price type against the product's installation options
         IF NEW.PB_PRICE_TYPE = 'free_installation' AND NOT has_free_install THEN
             RAISE EXCEPTION 'Product does not offer free installation option';
@@ -478,3 +482,29 @@ CREATE TRIGGER deduct_inventory_after_booking_confirmation
 BEFORE UPDATE ON PRODUCT_BOOKING
 FOR EACH ROW
 EXECUTE FUNCTION deduct_inventory_on_booking_confirmation();
+
+-- Function to set free installation option flag on insert
+CREATE OR REPLACE FUNCTION set_free_installation_option_on_insert()
+RETURNS TRIGGER AS $$
+DECLARE
+    has_free_install BOOLEAN;
+BEGIN
+    -- Get the free installation option from the product
+    SELECT PROD_HAS_FREE_INSTALL_OPTION
+    INTO has_free_install
+    FROM PRODUCT_VARIANT
+    JOIN PRODUCT ON PRODUCT_VARIANT.PROD_ID = PRODUCT.PROD_ID
+    WHERE VAR_ID = NEW.PB_VARIANT_ID;
+    
+    -- Set the free installation option flag in the booking
+    NEW.PB_HAS_FREE_INSTALL_OPTION := has_free_install;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger to set free installation option on insert
+CREATE TRIGGER set_free_installation_option_on_insert
+BEFORE INSERT ON PRODUCT_BOOKING
+FOR EACH ROW
+EXECUTE FUNCTION set_free_installation_option_on_insert();
