@@ -700,7 +700,7 @@ class ProductController extends BaseController
             // Set unit price to 0.00 - admin will update based on customer location and requirements
             $unitPrice = 0.00;
             
-            // Create a complete booking data structure
+                  // Create a complete booking data structure
             $bookingData = [
                 'PB_CUSTOMER_ID' => $userId,
                 'PB_VARIANT_ID' => $variantId,

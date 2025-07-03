@@ -319,8 +319,13 @@ ob_start();
                                 <p><strong>Price Type:</strong> <span id="view-price-type"></span></p>
                                 <p><strong>Total Amount:</strong> <span id="view-total-amount" class="fw-bold text-primary"></span></p>
                                 <p class="mt-3"><strong>SRP Price:</strong> <span id="view-srp-price"></span></p>
-                                <p><strong>Free Installation Price:</strong> <span id="view-free-install-price"></span></p>
-                                <p><strong>With Installation Price:</strong> <span id="view-with-install-price"></span></p>
+                                <div id="view-free-install-container">
+                                    <p><strong>Free Installation Price:</strong> <span id="view-free-install-price"></span></p>
+                                </div>
+                                <div id="view-with-install-container">
+                                    <p><strong>With Installation Price 1:</strong> <span id="view-with-install-price1"></span></p>
+                                    <p><strong>With Installation Price 2:</strong> <span id="view-with-install-price2"></span></p>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <p><strong>Status:</strong> <span id="view-status"></span></p>
@@ -386,13 +391,17 @@ ob_start();
                         <div class="col-md-6">
                             <label for="edit-price-type" class="form-label">Price Type</label>
                             <select id="edit-price-type" name="priceType" class="form-select">
-                                <option value="free_install">Free Installation</option>
-                                <option value="with_install">With Installation</option>
+                                <!-- Price type options will be populated dynamically based on product configuration -->
                             </select>
                             <div class="price-details mt-3">
                                 <p class="mb-1 text-muted small">SRP: <span id="edit-srp-price">₱0.00</span></p>
-                                <p class="mb-1 text-muted small">Free Install Price: <span id="edit-free-install-price">₱0.00</span></p>
-                                <p class="mb-1 text-muted small">With Install Price: <span id="edit-with-install-price">₱0.00</span></p>
+                                <div id="free-install-price-container">
+                                    <p class="mb-1 text-muted small">Free Install Price: <span id="edit-free-install-price">₱0.00</span></p>
+                                </div>
+                                <div id="with-install-price-container">
+                                    <p class="mb-1 text-muted small with-install1">With Install Price 1: <span id="edit-with-install-price1">₱0.00</span></p>
+                                    <p class="mb-1 text-muted small with-install2">With Install Price 2: <span id="edit-with-install-price2">₱0.00</span></p>
+                                </div>
                                 <p class="mt-2 fw-bold">Total Amount: <span id="edit-total-amount" class="text-primary">₱0.00</span></p>
                             </div>
                         </div>
@@ -765,8 +774,41 @@ function viewProductBooking(rowData) {
             $('#view-unit-price').text(formatCurrency(data.pb_unit_price));
             $('#view-total-amount').text(formatCurrency(data.pb_total_amount));
             $('#view-srp-price').text(formatCurrency(data.var_srp_price));
-            $('#view-free-install-price').text(formatCurrency(data.var_price_free_install));
-            $('#view-with-install-price').text(formatCurrency(data.var_price_with_install));
+            
+            // Handle different pricing display based on product configuration
+            const hasFreeInstallOption = data.pb_has_free_install_option || false;
+            
+            if (hasFreeInstallOption) {
+                // Show free install + with install price 1
+                $('#view-free-install-container').show();
+                $('#view-free-install-price').text(formatCurrency(data.var_price_free_install));
+                
+                $('#view-with-install-container').html(`
+                    <p><strong>With Installation Price:</strong> <span>${formatCurrency(data.var_price_with_install1)}</span></p>
+                `);
+            } else {
+                // Hide free install option, show with install 1 and 2
+                $('#view-free-install-container').hide();
+                
+                $('#view-with-install-container').html(`
+                    <p><strong>With Installation Price 1:</strong> <span>${formatCurrency(data.var_price_with_install1)}</span></p>
+                    <p><strong>With Installation Price 2:</strong> <span>${formatCurrency(data.var_price_with_install2)}</span></p>
+                `);
+            }
+            
+            // Format price type for display
+            let priceTypeFormatted = 'Unknown';
+            if (data.pb_price_type) {
+                if (data.pb_price_type === 'free_installation') {
+                    priceTypeFormatted = 'Free Installation';
+                } else if (data.pb_price_type === 'with_installation1') {
+                    priceTypeFormatted = hasFreeInstallOption ? 'With Installation' : 'With Installation 1';
+                } else if (data.pb_price_type === 'with_installation2') {
+                    priceTypeFormatted = 'With Installation 2';
+                }
+            }
+            
+            $('#view-price-type').text(priceTypeFormatted);
             
             // Format dates and times
             $('#view-order-date').text(formatDate(data.pb_order_date) + ' ' + formatTime12Hour(data.pb_order_date.split(' ')[1]));
@@ -798,12 +840,6 @@ function viewProductBooking(rowData) {
             } else {
                 techContainer.html('<p class="text-muted mb-0">No technicians assigned</p>');
             }
-            
-            // Format price type for display
-            const priceTypeFormatted = data.pb_price_type ? 
-                (data.pb_price_type === 'free_install' ? 'Free Installation' : 'With Installation') : 
-                'Free Installation';
-            $('#view-price-type').text(priceTypeFormatted);
             
             // Show the modal
             $('#viewProductBookingModal').modal('show');
@@ -851,7 +887,55 @@ function editProductBooking(rowData) {
             // Populate the edit form
             $('#edit-id').val(data.pb_id);
             $('#edit-status').val(data.pb_status);
-            $('#edit-price-type').val(data.pb_price_type || 'free_install');
+            
+            // Clear and populate price type options based on product configuration
+            const hasFreeInstallOption = data.pb_has_free_install_option || false;
+            const priceTypeSelect = $('#edit-price-type');
+            priceTypeSelect.empty();
+            
+            if (hasFreeInstallOption) {
+                // Product has free installation option
+                priceTypeSelect.append(`<option value="free_installation">Free Installation</option>`);
+                priceTypeSelect.append(`<option value="with_installation1">With Installation</option>`);
+                
+                // Show/hide price containers
+                $('#free-install-price-container').show();
+                $('.with-install2').hide();
+                $('.with-install1').text('With Install Price:');
+                
+                // Set prices
+                $('#edit-free-install-price').text(formatCurrency(data.var_price_free_install));
+                $('#edit-with-install-price1').text(formatCurrency(data.var_price_with_install1));
+            } else {
+                // Product doesn't have free installation option
+                priceTypeSelect.append(`<option value="with_installation1">With Installation 1</option>`);
+                
+                // Only show with_installation2 if the price is not 0
+                const withInstall2Price = parseFloat(data.var_price_with_install2 || 0);
+                if (withInstall2Price > 0) {
+                    priceTypeSelect.append(`<option value="with_installation2">With Installation 2</option>`);
+                    $('.with-install2').show();
+                } else {
+                    $('.with-install2').hide();
+                }
+                
+                // Show/hide price containers
+                $('#free-install-price-container').hide();
+                $('.with-install1').text('With Install Price 1:');
+                
+                // Set prices
+                $('#edit-with-install-price1').text(formatCurrency(data.var_price_with_install1));
+                $('#edit-with-install-price2').text(formatCurrency(data.var_price_with_install2));
+            }
+            
+            // Select current price type
+            const currentPriceType = data.pb_price_type || 'free_installation';
+            if (priceTypeSelect.find(`option[value="${currentPriceType}"]`).length > 0) {
+                priceTypeSelect.val(currentPriceType);
+            } else {
+                // Default to first option if current price type is not available
+                priceTypeSelect.val(priceTypeSelect.find('option:first').val());
+            }
             
             // Set min date to current date
             const now = new Date();
@@ -934,12 +1018,33 @@ function editProductBooking(rowData) {
 function updateTotalAmount(data) {
     const priceType = $('#edit-price-type').val();
     const quantity = parseInt(data.pb_quantity) || 1;
+    const hasFreeInstallOption = data.pb_has_free_install_option || false;
     let unitPrice = 0;
     
-    if (priceType === 'free_install') {
+    if (priceType === 'free_installation' && hasFreeInstallOption) {
+        // Free installation
         unitPrice = parseFloat(data.var_price_free_install || 0);
-    } else {
-        unitPrice = parseFloat(data.var_price_with_install || 0);
+        
+        // Highlight the selected price
+        $('#edit-free-install-price').addClass('fw-bold text-primary');
+        $('#edit-with-install-price1').removeClass('fw-bold text-primary');
+        $('#edit-with-install-price2').removeClass('fw-bold text-primary');
+    } else if (priceType === 'with_installation1') {
+        // With installation 1
+        unitPrice = parseFloat(data.var_price_with_install1 || 0);
+        
+        // Highlight the selected price
+        $('#edit-free-install-price').removeClass('fw-bold text-primary');
+        $('#edit-with-install-price1').addClass('fw-bold text-primary');
+        $('#edit-with-install-price2').removeClass('fw-bold text-primary');
+    } else if (priceType === 'with_installation2') {
+        // With installation 2
+        unitPrice = parseFloat(data.var_price_with_install2 || 0);
+        
+        // Highlight the selected price
+        $('#edit-free-install-price').removeClass('fw-bold text-primary');
+        $('#edit-with-install-price1').removeClass('fw-bold text-primary');
+        $('#edit-with-install-price2').addClass('fw-bold text-primary');
     }
     
     const totalAmount = unitPrice * quantity;
@@ -947,15 +1052,6 @@ function updateTotalAmount(data) {
     
     // Update unit price for the booking
     $('#edit-unit-price').val(unitPrice);
-    
-    // Highlight the selected price
-    if (priceType === 'free_install') {
-        $('#edit-free-install-price').addClass('fw-bold text-primary');
-        $('#edit-with-install-price').removeClass('fw-bold text-primary');
-    } else {
-        $('#edit-free-install-price').removeClass('fw-bold text-primary');
-        $('#edit-with-install-price').addClass('fw-bold text-primary');
-    }
 }
 
 // Add a technician to the list in the edit form

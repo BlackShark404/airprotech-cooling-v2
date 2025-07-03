@@ -402,7 +402,7 @@ BEGIN
     ) THEN
         -- Get the product ID associated with this variant for checking installation options
         SELECT 
-            PROD_ID, 
+            PRODUCT_VARIANT.PROD_ID, 
             PROD_HAS_FREE_INSTALL_OPTION,
             PROD_DISCOUNT_WITH_INSTALL_PCT1,
             PROD_DISCOUNT_WITH_INSTALL_PCT2
@@ -490,7 +490,7 @@ DECLARE
     has_free_install BOOLEAN;
 BEGIN
     -- Get the free installation option from the product
-    SELECT PROD_HAS_FREE_INSTALL_OPTION
+    SELECT PRODUCT.PROD_HAS_FREE_INSTALL_OPTION
     INTO has_free_install
     FROM PRODUCT_VARIANT
     JOIN PRODUCT ON PRODUCT_VARIANT.PROD_ID = PRODUCT.PROD_ID
